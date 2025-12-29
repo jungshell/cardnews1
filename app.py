@@ -232,25 +232,49 @@ def _render_article_details(article: Dict, title: str, description: str, link: s
                 st.session_state[f"card_script_{article_id}"] = cached_script
                 st.success("✅ 캐시된 문구를 불러왔습니다.")
             else:
-                with st.spinner("생성 중..."):
-                    script = generate_cardnews_with_gemini(content, title)
-                    if script:
-                        save_cached_script(article_id, script)
-                        st.session_state[f"card_script_{article_id}"] = script
-                        st.success("✅ 생성 완료!")
-                    else:
-                        st.error("❌ 생성 실패")
+                with st.spinner("생성 중... (약 30초 소요)"):
+                    try:
+                        script = generate_cardnews_with_gemini(content, title)
+                        if script:
+                            # 파싱 테스트
+                            cards = parse_card_script(script)
+                            if not cards:
+                                st.warning("⚠️ 생성된 문구를 파싱할 수 없습니다. 형식을 확인해주세요.")
+                                st.code(script[:500] + "..." if len(script) > 500 else script, language="text")
+                            else:
+                                save_cached_script(article_id, script)
+                                st.session_state[f"card_script_{article_id}"] = script
+                                st.success(f"✅ 생성 완료! ({len(cards)}개 카드)")
+                        else:
+                            st.error("❌ 생성 실패: Gemini API 호출 실패 또는 응답 없음")
+                            st.info("💡 Streamlit Cloud의 Secrets에서 GEMINI_API_KEY를 확인해주세요.")
+                    except Exception as e:
+                        st.error(f"❌ 생성 실패: {str(e)}")
+                        import traceback
+                        st.code(traceback.format_exc(), language="text")
     
     with btn_col2:
         if st.button("🔄 새로 생성", key=f"daily_cardnews_new_{idx}", use_container_width=True, help="캐시 무시하고 새로 생성"):
-            with st.spinner("생성 중..."):
-                script = generate_cardnews_with_gemini(content, title)
-                if script:
-                    save_cached_script(article_id, script)
-                    st.session_state[f"card_script_{article_id}"] = script
-                    st.success("✅ 새로 생성 완료!")
-                else:
-                    st.error("❌ 생성 실패")
+            with st.spinner("생성 중... (약 30초 소요)"):
+                try:
+                    script = generate_cardnews_with_gemini(content, title)
+                    if script:
+                        # 파싱 테스트
+                        cards = parse_card_script(script)
+                        if not cards:
+                            st.warning("⚠️ 생성된 문구를 파싱할 수 없습니다. 형식을 확인해주세요.")
+                            st.code(script[:500] + "..." if len(script) > 500 else script, language="text")
+                        else:
+                            save_cached_script(article_id, script)
+                            st.session_state[f"card_script_{article_id}"] = script
+                            st.success(f"✅ 새로 생성 완료! ({len(cards)}개 카드)")
+                    else:
+                        st.error("❌ 생성 실패: Gemini API 호출 실패 또는 응답 없음")
+                        st.info("💡 Streamlit Cloud의 Secrets에서 GEMINI_API_KEY를 확인해주세요.")
+                except Exception as e:
+                    st.error(f"❌ 생성 실패: {str(e)}")
+                    import traceback
+                    st.code(traceback.format_exc(), language="text")
     
     with btn_col3:
         st.write("")  # 공간 확보
@@ -950,6 +974,31 @@ def main() -> None:
                 import subprocess
                 import sys
                 
+                # 전체 너비 사용을 위한 CSS
+                st.markdown(
+                    """
+                    <style>
+                    /* 크롤링 로그 영역 전체 너비 사용 */
+                    div[data-testid="stVerticalBlock"] > div:has(textarea) {
+                        width: 100% !important;
+                        max-width: 100vw !important;
+                        margin-left: 0 !important;
+                        margin-right: 0 !important;
+                        padding-left: 0 !important;
+                        padding-right: 0 !important;
+                    }
+                    /* textarea 전체 너비 */
+                    textarea[readonly] {
+                        width: 100vw !important;
+                        max-width: 100vw !important;
+                        margin-left: calc(-50vw + 50%) !important;
+                        margin-right: calc(-50vw + 50%) !important;
+                    }
+                    </style>
+                    """,
+                    unsafe_allow_html=True
+                )
+                
                 # 진행 상황 표시 영역 (전체 너비 사용)
                 status_placeholder = st.empty()
                 # 로그 영역을 전체 너비로 표시
@@ -963,22 +1012,31 @@ def main() -> None:
                     if not os.path.exists(script_path):
                         st.error(f"크롤링 스크립트를 찾을 수 없습니다: {script_path}")
                     else:
-                        # 환경 변수 전달
+                        # 환경 변수 전달 (Streamlit Cloud Secrets 포함)
                         env = os.environ.copy()
                         
-                        status_placeholder.info("⏳ 크롤링 시작 중...")
+                        # Streamlit Cloud Secrets는 자동으로 os.environ에 로드되지만,
+                        # 명시적으로 확인하여 subprocess에 전달
+                        required_vars = ["NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "GEMINI_API_KEY"]
+                        missing_vars = [var for var in required_vars if not env.get(var)]
                         
-                        # subprocess 실행 (버퍼링 없이 실시간 출력)
-                        process = subprocess.Popen(
-                            [sys.executable, script_path],
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT,
-                            text=True,
-                            bufsize=1,  # 라인 버퍼링
-                            universal_newlines=True,
-                            cwd=current_dir,
-                            env=env
-                        )
+                        if missing_vars:
+                            status_placeholder.error(f"❌ 환경 변수 누락: {', '.join(missing_vars)}")
+                            log_placeholder.warning("Streamlit Cloud의 Secrets에 환경 변수를 설정해주세요.")
+                        else:
+                            status_placeholder.info("⏳ 크롤링 시작 중...")
+                            
+                            # subprocess 실행 (버퍼링 없이 실시간 출력)
+                            process = subprocess.Popen(
+                                [sys.executable, script_path],
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT,
+                                text=True,
+                                bufsize=1,  # 라인 버퍼링
+                                universal_newlines=True,
+                                cwd=current_dir,
+                                env=env
+                            )
                         
                         # 실시간 로그 수집
                         log_lines = []
@@ -1009,8 +1067,8 @@ def main() -> None:
                                     log_text_escaped = html.escape(log_text)
                                     log_placeholder.markdown(
                                         f"""
-                                        <div style="width: 100%; max-width: 100%;">
-                                        <textarea readonly style="width: 100%; height: 200px; font-family: monospace; font-size: 0.9em; padding: 10px; background-color: #1e1e1e; color: #d4d4d4; border: 1px solid #3e3e3e; border-radius: 4px; resize: vertical; overflow-y: auto;">{log_text_escaped}</textarea>
+                                        <div style="width: 100vw; max-width: 100vw; margin-left: calc(-50vw + 50%); margin-right: calc(-50vw + 50%); padding: 0;">
+                                        <textarea readonly style="width: 100%; height: 500px; font-family: monospace; font-size: 0.85em; padding: 12px; background-color: #1e1e1e; color: #d4d4d4; border: 1px solid #3e3e3e; border-radius: 4px; resize: both; overflow-y: auto; line-height: 1.4; box-sizing: border-box;">{log_text_escaped}</textarea>
                                         </div>
                                         """,
                                         unsafe_allow_html=True
@@ -1029,8 +1087,8 @@ def main() -> None:
                             log_text_escaped = html.escape(log_text)
                             log_placeholder.markdown(
                                 f"""
-                                <div style="width: 100%; max-width: 100%;">
-                                <textarea readonly style="width: 100%; height: 200px; font-family: monospace; font-size: 0.9em; padding: 10px; background-color: #1e1e1e; color: #d4d4d4; border: 1px solid #3e3e3e; border-radius: 4px; resize: vertical; overflow-y: auto;">{log_text_escaped}</textarea>
+                                <div style="width: 100vw; max-width: 100vw; margin-left: calc(-50vw + 50%); margin-right: calc(-50vw + 50%); padding: 0;">
+                                <textarea readonly style="width: 100%; height: 500px; font-family: monospace; font-size: 0.85em; padding: 12px; background-color: #1e1e1e; color: #d4d4d4; border: 1px solid #3e3e3e; border-radius: 4px; resize: both; overflow-y: auto; line-height: 1.4; box-sizing: border-box;">{log_text_escaped}</textarea>
                                 </div>
                                 """,
                                 unsafe_allow_html=True
@@ -1047,8 +1105,8 @@ def main() -> None:
                             log_text_escaped = html.escape(log_text)
                             log_placeholder.markdown(
                                 f"""
-                                <div style="width: 100%; max-width: 100%;">
-                                <textarea readonly style="width: 100%; height: 300px; font-family: monospace; font-size: 0.9em; padding: 10px; background-color: #1e1e1e; color: #d4d4d4; border: 1px solid #3e3e3e; border-radius: 4px; resize: vertical; overflow-y: auto;">{log_text_escaped}</textarea>
+                                <div style="width: 100vw; max-width: 100vw; margin-left: calc(-50vw + 50%); margin-right: calc(-50vw + 50%); padding: 0;">
+                                <textarea readonly style="width: 100%; height: 600px; font-family: monospace; font-size: 0.85em; padding: 12px; background-color: #1e1e1e; color: #d4d4d4; border: 1px solid #3e3e3e; border-radius: 4px; resize: both; overflow-y: auto; line-height: 1.4; box-sizing: border-box;">{log_text_escaped}</textarea>
                                 </div>
                                 """,
                                 unsafe_allow_html=True

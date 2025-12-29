@@ -225,31 +225,40 @@ def generate_cardnews_with_gemini(news_content: str, news_title: str) -> Optiona
             if resp.status_code == 429:  # Rate limit
                 if attempt < MAX_RETRIES - 1:
                     wait_time = RETRY_DELAY * (attempt + 1)
-                    print(f"[Gemini Rate Limit] {wait_time}초 대기 후 재시도...")
+                    print(f"[Gemini Rate Limit] {wait_time}초 대기 후 재시도...", flush=True)
                     time.sleep(wait_time)
                     continue
             if resp.status_code != 200:
-                print(f"[Gemini HTTP 오류] {resp.status_code} {resp.text}")
+                error_text = resp.text[:500] if len(resp.text) > 500 else resp.text
+                print(f"[Gemini HTTP 오류] {resp.status_code} {error_text}", flush=True)
                 return None
 
             data = resp.json()
             candidates = data.get("candidates", [])
             if not candidates:
-                print("[Gemini 응답 경고] candidates가 비어 있습니다.")
+                print("[Gemini 응답 경고] candidates가 비어 있습니다.", flush=True)
+                print(f"[Gemini 응답] 전체 응답: {str(data)[:500]}", flush=True)
                 return None
 
             parts = candidates[0].get("content", {}).get("parts", [])
             if not parts:
-                print("[Gemini 응답 경고] parts가 비어 있습니다.")
+                print("[Gemini 응답 경고] parts가 비어 있습니다.", flush=True)
+                print(f"[Gemini 응답] candidates[0]: {str(candidates[0])[:500]}", flush=True)
                 return None
 
-            return parts[0].get("text", "")
+            result_text = parts[0].get("text", "")
+            if not result_text:
+                print("[Gemini 응답 경고] text가 비어 있습니다.", flush=True)
+                return None
+            
+            print(f"[Gemini 성공] {len(result_text)}자 생성됨", flush=True)
+            return result_text
         except requests.exceptions.Timeout:
-            print(f"[Gemini 타임아웃] (시도 {attempt + 1}/{MAX_RETRIES})")
+            print(f"[Gemini 타임아웃] (시도 {attempt + 1}/{MAX_RETRIES})", flush=True)
             if attempt < MAX_RETRIES - 1:
                 time.sleep(RETRY_DELAY * (attempt + 1))
         except Exception as e:
-            print(f"[Gemini 호출 오류] {e}")
+            print(f"[Gemini 호출 오류] {e}", flush=True)
             if attempt < MAX_RETRIES - 1:
                 time.sleep(RETRY_DELAY * (attempt + 1))
     
