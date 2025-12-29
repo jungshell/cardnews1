@@ -44,24 +44,35 @@ def search_naver_news(keyword: str, display: int = 10, sort: str = "date") -> Li
     for attempt in range(MAX_RETRIES):
         try:
             resp = requests.get(NAVER_NEWS_URL, headers=headers, params=params, timeout=10)
+            
+            # HTTP 상태 코드 확인 (성공 여부와 상관없이 로그 출력)
+            print(f"[네이버 API] HTTP 상태 코드: {resp.status_code}", flush=True)
+            
+            if resp.status_code != 200:
+                error_text = resp.text[:200]  # 처음 200자만
+                print(f"[네이버 API] HTTP 오류 {resp.status_code}: {error_text}", flush=True)
+                return []
+            
             resp.raise_for_status()
             data = resp.json()
             items = data.get("items", [])
-            print(f"[네이버 API] '{keyword}' 검색 성공: {len(items)}개 기사")
+            total = data.get("total", 0)  # 전체 검색 결과 수
+            print(f"[네이버 API] '{keyword}' 검색 성공: {len(items)}개 기사 반환 (전체: {total}개)", flush=True)
             return items
         except requests.exceptions.Timeout:
-            print(f"[네이버 API] 타임아웃 (시도 {attempt + 1}/{MAX_RETRIES})")
+            print(f"[네이버 API] 타임아웃 (시도 {attempt + 1}/{MAX_RETRIES})", flush=True)
             if attempt < MAX_RETRIES - 1:
                 time.sleep(RETRY_DELAY * (attempt + 1))
         except requests.exceptions.HTTPError as e:
-            print(f"[네이버 API] HTTP 오류: {e.response.status_code} {e.response.text}")
+            error_text = str(e.response.text)[:200] if hasattr(e, 'response') and e.response else str(e)
+            print(f"[네이버 API] HTTP 오류: {e.response.status_code if hasattr(e, 'response') else 'N/A'} {error_text}", flush=True)
             return []  # HTTP 오류는 재시도하지 않음
         except Exception as e:
-            print(f"[네이버 API] 오류: {e}")
+            print(f"[네이버 API] 오류: {e}", flush=True)
             if attempt < MAX_RETRIES - 1:
                 time.sleep(RETRY_DELAY * (attempt + 1))
     
-    print(f"[네이버 API] '{keyword}' 검색 실패 (최대 재시도 횟수 초과)")
+    print(f"[네이버 API] '{keyword}' 검색 실패 (최대 재시도 횟수 초과)", flush=True)
     return []
 
 
