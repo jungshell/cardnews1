@@ -366,29 +366,46 @@ def main():
     if os.path.exists(env_path):
         load_dotenv(env_path)
     
+    # stdout에도 출력 (Streamlit에서 subprocess 로그를 보기 위해)
+    import sys
+    def log_and_print(message, level="info"):
+        """logger와 stdout 모두에 출력"""
+        if level == "info":
+            logger.info(message)
+            print(message, flush=True)
+        elif level == "warning":
+            logger.warning(message)
+            print(f"[경고] {message}", flush=True)
+        elif level == "error":
+            logger.error(message)
+            print(f"[오류] {message}", flush=True)
+        else:
+            logger.info(message)
+            print(message, flush=True)
+    
     # 명령줄 인자 확인
     slack_only = len(sys.argv) > 1 and sys.argv[1] == "slack-only"
     
     if slack_only:
         # Slack 알림만 전송
-        logger.info("Slack 알림만 전송 모드")
+        log_and_print("Slack 알림만 전송 모드")
         articles = load_daily_recommendations()
         if articles:
             send_slack_notification(articles)
         else:
-            logger.error("daily_recommendations.json 파일이 없습니다.")
+            log_and_print("daily_recommendations.json 파일이 없습니다.", "error")
     else:
         # 크롤링 실행
-        logger.info("=" * 60)
-        logger.info("일일 자동 크롤링 시작")
-        logger.info("=" * 60)
+        log_and_print("=" * 60)
+        log_and_print("일일 자동 크롤링 시작")
+        log_and_print("=" * 60)
         
         articles = fetch_daily_recommendations()
         
         if articles:
             # daily_recommendations.json에 저장
             save_daily_recommendations(articles)
-            logger.info(f"저장 완료: {len(articles)}개 기사를 daily_recommendations.json에 저장")
+            log_and_print(f"저장 완료: {len(articles)}개 기사를 daily_recommendations.json에 저장")
             
             # 크롤링 기록 저장
             add_crawl_history("일일 자동 크롤링", len(articles))
@@ -396,11 +413,11 @@ def main():
             # Slack 알림 전송
             send_slack_notification(articles)
         else:
-            logger.warning("추천 기사를 찾을 수 없습니다.")
+            log_and_print("추천 기사를 찾을 수 없습니다.", "warning")
     
-    logger.info("=" * 60)
-    logger.info("완료")
-    logger.info("=" * 60)
+    log_and_print("=" * 60)
+    log_and_print("완료")
+    log_and_print("=" * 60)
 
 
 if __name__ == "__main__":
