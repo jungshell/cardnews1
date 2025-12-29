@@ -976,10 +976,8 @@ def main() -> None:
         articles = load_daily_recommendations()
         date_str = get_daily_recommendations_date()
         
-        # 크롤링 버튼 (항상 표시)
-        col_btn1, col_btn2 = st.columns([1, 4])
-        with col_btn1:
-            if st.button("🔄 지금 다시 크롤링하기", key="daily_crawl_button"):
+        # 크롤링 버튼 (항상 표시) - 전체 너비 사용
+        if st.button("🔄 지금 다시 크롤링하기", key="daily_crawl_button", use_container_width=True):
                 import subprocess
                 import sys
                 
