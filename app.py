@@ -270,9 +270,18 @@ def _render_article_details(article: Dict, title: str, description: str, link: s
                             st.success(f"✅ 새로 생성 완료! ({len(cards)}개 카드)")
                     else:
                         st.error("❌ 생성 실패: Gemini API 호출 실패 또는 응답 없음")
-                        st.info("💡 Streamlit Cloud의 Secrets에서 GEMINI_API_KEY를 확인해주세요.")
+                        st.warning("⚠️ 가능한 원인:")
+                        st.markdown("""
+                        - **GEMINI_API_KEY가 설정되지 않았거나 잘못됨**
+                        - **Gemini API 쿼터 초과 (429 오류)**
+                        - **네트워크 오류 또는 타임아웃**
+                        """)
+                        st.info("💡 **해결 방법:** Streamlit Cloud의 Secrets에서 `GEMINI_API_KEY`를 확인하고, 올바른 형식으로 설정했는지 확인해주세요.")
+                        st.markdown("---")
+                        st.caption("💡 **디버깅:** Streamlit Cloud의 'Manage app' → 'Logs'에서 '[Gemini]'로 시작하는 메시지를 확인하세요.")
                 except Exception as e:
                     st.error(f"❌ 생성 실패: {str(e)}")
+                    st.warning("⚠️ 예외 발생 - 상세 오류:")
                     import traceback
                     st.code(traceback.format_exc(), language="text")
     
@@ -974,31 +983,6 @@ def main() -> None:
                 import subprocess
                 import sys
                 
-                # 전체 너비 사용을 위한 CSS
-                st.markdown(
-                    """
-                    <style>
-                    /* 크롤링 로그 영역 전체 너비 사용 */
-                    div[data-testid="stVerticalBlock"] > div:has(textarea) {
-                        width: 100% !important;
-                        max-width: 100vw !important;
-                        margin-left: 0 !important;
-                        margin-right: 0 !important;
-                        padding-left: 0 !important;
-                        padding-right: 0 !important;
-                    }
-                    /* textarea 전체 너비 */
-                    textarea[readonly] {
-                        width: 100vw !important;
-                        max-width: 100vw !important;
-                        margin-left: calc(-50vw + 50%) !important;
-                        margin-right: calc(-50vw + 50%) !important;
-                    }
-                    </style>
-                    """,
-                    unsafe_allow_html=True
-                )
-                
                 # 진행 상황 표시 영역 (전체 너비 사용)
                 status_placeholder = st.empty()
                 # 로그 영역을 전체 너비로 표시
@@ -1087,8 +1071,8 @@ def main() -> None:
                             log_text_escaped = html.escape(log_text)
                             log_placeholder.markdown(
                                 f"""
-                                <div style="width: 100vw; max-width: 100vw; margin-left: calc(-50vw + 50%); margin-right: calc(-50vw + 50%); padding: 0;">
-                                <textarea readonly style="width: 100%; height: 500px; font-family: monospace; font-size: 0.85em; padding: 12px; background-color: #1e1e1e; color: #d4d4d4; border: 1px solid #3e3e3e; border-radius: 4px; resize: both; overflow-y: auto; line-height: 1.4; box-sizing: border-box;">{log_text_escaped}</textarea>
+                                <div style="position: relative; width: 100vw !important; max-width: 100vw !important; left: 50% !important; right: 50% !important; margin-left: -50vw !important; margin-right: -50vw !important; padding: 0 !important; box-sizing: border-box !important;">
+                                <textarea readonly style="width: 100% !important; height: 600px !important; font-family: monospace !important; font-size: 0.85em !important; padding: 12px !important; background-color: #1e1e1e !important; color: #d4d4d4 !important; border: 1px solid #3e3e3e !important; border-radius: 4px !important; resize: both !important; overflow-y: auto !important; line-height: 1.4 !important; box-sizing: border-box !important; display: block !important;">{log_text_escaped}</textarea>
                                 </div>
                                 """,
                                 unsafe_allow_html=True
@@ -1105,8 +1089,8 @@ def main() -> None:
                             log_text_escaped = html.escape(log_text)
                             log_placeholder.markdown(
                                 f"""
-                                <div style="width: 100vw; max-width: 100vw; margin-left: calc(-50vw + 50%); margin-right: calc(-50vw + 50%); padding: 0;">
-                                <textarea readonly style="width: 100%; height: 600px; font-family: monospace; font-size: 0.85em; padding: 12px; background-color: #1e1e1e; color: #d4d4d4; border: 1px solid #3e3e3e; border-radius: 4px; resize: both; overflow-y: auto; line-height: 1.4; box-sizing: border-box;">{log_text_escaped}</textarea>
+                                <div style="position: relative; width: 100vw !important; max-width: 100vw !important; left: 50% !important; right: 50% !important; margin-left: -50vw !important; margin-right: -50vw !important; padding: 0 !important; box-sizing: border-box !important;">
+                                <textarea readonly style="width: 100% !important; height: 700px !important; font-family: monospace !important; font-size: 0.85em !important; padding: 12px !important; background-color: #1e1e1e !important; color: #d4d4d4 !important; border: 1px solid #3e3e3e !important; border-radius: 4px !important; resize: both !important; overflow-y: auto !important; line-height: 1.4 !important; box-sizing: border-box !important; display: block !important;">{log_text_escaped}</textarea>
                                 </div>
                                 """,
                                 unsafe_allow_html=True
