@@ -124,7 +124,7 @@ def handle_create_cardnews(payload: Dict, article: Dict) -> Dict:
             img_data = prepare_card_images(card)
             images_data.append(img_data)
         
-        # 결과를 슬랙에 전송
+        # 결과를 슬랙에 전송 (Bot Token 사용)
         blocks = [
             {
                 "type": "header",
@@ -138,20 +138,20 @@ def handle_create_cardnews(payload: Dict, article: Dict) -> Dict:
             },
         ]
         
-        # 각 카드 정보 표시
-        for idx, card in enumerate(cards, 1):
+        # 각 카드 정보 표시 (최대 10개)
+        for card_idx, card in enumerate(cards[:10], 1):
             card_type = card.get('type', '')
             head = card.get('head', '')
             body = card.get('body', '')
             image_key = card.get('image_key', '')
             
-            card_text = f"*카드 {idx} ({card_type})*\n"
+            card_text = f"*카드 {card_idx} ({card_type})*\n"
             if head:
-                card_text += f"HEAD: {head}\n"
+                card_text += f"*HEAD:* {head}\n"
             if body:
-                card_text += f"BODY: {body}\n"
+                card_text += f"*BODY:* {body}\n"
             if image_key:
-                card_text += f"IMAGE_KEY: {image_key}\n"
+                card_text += f"*IMAGE_KEY:* {image_key}"
             
             blocks.append({
                 "type": "section",
@@ -161,8 +161,19 @@ def handle_create_cardnews(payload: Dict, article: Dict) -> Dict:
                 },
             })
             
-            if idx < len(cards):
+            if card_idx < min(len(cards), 10):
                 blocks.append({"type": "divider"})
+        
+        if len(cards) > 10:
+            blocks.append({
+                "type": "context",
+                "elements": [
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*총 {len(cards)}개 카드 중 10개만 표시. 전체는 Streamlit 앱에서 확인하세요.*",
+                    },
+                ],
+            })
         
         # Streamlit 앱 링크 버튼
         streamlit_url = os.getenv("STREAMLIT_APP_URL", "https://cardnews1-hd646zyxsbzawjaibtjgar.streamlit.app")
@@ -176,18 +187,32 @@ def handle_create_cardnews(payload: Dict, article: Dict) -> Dict:
                     "type": "button",
                     "text": {
                         "type": "plain_text",
-                        "text": "🔗 Streamlit 앱에서 보기",
+                        "text": "🔗 Streamlit 앱에서 전체 보기",
                     },
                     "url": streamlit_url_with_params,
                 },
             ],
         })
         
-        # 슬랙에 메시지 전송
-        if SLACK_WEBHOOK_URL:
-            requests.post(SLACK_WEBHOOK_URL, json={
-                "blocks": blocks
-            })
+        # Bot Token으로 슬랙에 메시지 전송
+        channel_id = payload.get('channel', {}).get('id')
+        if SLACK_BOT_TOKEN and channel_id:
+            try:
+                requests.post(
+                    "https://slack.com/api/chat.postMessage",
+                    headers={
+                        "Authorization": f"Bearer {SLACK_BOT_TOKEN}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "channel": channel_id,
+                        "blocks": blocks,
+                        "text": f"✅ 카드뉴스 생성 완료! ({len(cards)}개 카드)",
+                    },
+                    timeout=10
+                )
+            except Exception as e:
+                print(f"[슬랙 메시지 전송 오류] {e}")
         
         return jsonify({
             "response_type": "in_channel",
@@ -214,36 +239,69 @@ def handle_view_summary(payload: Dict, article: Dict) -> Dict:
     link = article.get('link', '')
     article_id = link or title
     
+    # 즉시 응답
+    response_url = payload.get('response_url')
+    if response_url:
+        requests.post(response_url, json={
+            "response_type": "ephemeral",
+            "text": "요약을 가져오는 중...",
+            "replace_original": False
+        })
+    
     # 캐시에서 요약 가져오기
     summary = get_cached_summary(article_id)
     if not summary:
         # 요약 생성
         summary = summarize_with_gemini(description, title)
         if not summary:
+            if response_url:
+                requests.post(response_url, json={
+                    "response_type": "ephemeral",
+                    "text": "❌ 요약 생성에 실패했습니다.",
+                    "replace_original": True
+                })
             return jsonify({
                 "response_type": "ephemeral",
                 "text": "❌ 요약 생성에 실패했습니다."
             }), 200
     
-    # 모달로 표시
+    # HTML 태그 제거
+    import re
+    summary_clean = re.sub(r'<[^>]+>', '', summary)
+    summary_clean = summary_clean.replace('**', '*')  # 마크다운 변환
+    
+    # 요약이 너무 길면 잘라내기
+    if len(summary_clean) > 2000:
+        summary_clean = summary_clean[:2000] + "..."
+    
+    # 결과 전송
+    blocks = [
+        {
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": f"📄 요약: {title[:50]}",
+            },
+        },
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": summary_clean,
+            },
+        },
+    ]
+    
+    if response_url:
+        requests.post(response_url, json={
+            "response_type": "ephemeral",
+            "blocks": blocks,
+            "replace_original": True
+        })
+    
     return jsonify({
         "response_type": "ephemeral",
-        "blocks": [
-            {
-                "type": "header",
-                "text": {
-                    "type": "plain_text",
-                    "text": f"📄 요약: {title[:50]}",
-                },
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": summary,
-                },
-            },
-        ]
+        "blocks": blocks
     }), 200
 
 
