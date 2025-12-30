@@ -418,17 +418,43 @@ def send_slack_notification(articles: List[Dict]) -> bool:
                 "action_id": f"view_article_{idx}",
             })
         
-        # 카드뉴스 생성 버튼 (Streamlit 앱 링크)
-        streamlit_url = os.getenv("STREAMLIT_APP_URL", "https://cardnews1-hd646zyxsbzawjaibtjgar.streamlit.app")
-        buttons.append({
-            "type": "button",
-            "text": {
-                "type": "plain_text",
-                "text": "📝 카드뉴스 생성",
-            },
-            "url": streamlit_url,
-            "action_id": f"create_cardnews_{idx}",
-        })
+        # 카드뉴스 생성 버튼
+        slack_app_url = os.getenv("SLACK_APP_URL")
+        if slack_app_url:
+            # Interactive 버튼 (Slack App 서버로 요청)
+            buttons.append({
+                "type": "button",
+                "text": {
+                    "type": "plain_text",
+                    "text": "📄 요약 보기",
+                },
+                "action_id": f"view_summary_{idx}",
+                "value": str(idx),
+            })
+            
+            buttons.append({
+                "type": "button",
+                "text": {
+                    "type": "plain_text",
+                    "text": "📝 카드뉴스 생성",
+                },
+                "action_id": f"create_cardnews_{idx}",
+                "value": str(idx),
+            })
+        else:
+            # 일반 URL 버튼 (Streamlit 앱 링크)
+            streamlit_base_url = os.getenv("STREAMLIT_APP_URL", "https://cardnews1-hd646zyxsbzawjaibtjgar.streamlit.app")
+            import urllib.parse
+            streamlit_url = f"{streamlit_base_url}?article_url={urllib.parse.quote(link)}" if link else streamlit_base_url
+            buttons.append({
+                "type": "button",
+                "text": {
+                    "type": "plain_text",
+                    "text": "📝 카드뉴스 생성",
+                },
+                "url": streamlit_url,
+                "action_id": f"create_cardnews_{idx}",
+            })
         
         if buttons:
             blocks.append({
