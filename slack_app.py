@@ -22,6 +22,12 @@ SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
 SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
 
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint for Render"""
+    return jsonify({"status": "ok", "service": "slack_app"}), 200
+
+
 def verify_slack_request(request):
     """Slack 요청 검증"""
     if not SLACK_SIGNING_SECRET:
