@@ -275,6 +275,42 @@ def fetch_daily_recommendations() -> List[Dict]:
     return top_articles
 
 
+def _clean_html_tags(text: str) -> str:
+    """HTML 태그를 제거하고 텍스트만 반환합니다."""
+    import re
+    if not text:
+        return ""
+    # HTML 태그 제거
+    text = re.sub(r'<[^>]+>', '', text)
+    # HTML 엔티티 디코딩
+    text = text.replace('&quot;', '"').replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>')
+    text = text.replace('&nbsp;', ' ').replace('&#39;', "'").replace('&apos;', "'")
+    # 연속된 공백 정리
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
+
+
+def _format_date(pub_date: str) -> str:
+    """날짜를 한국어 형식으로 변환합니다."""
+    if not pub_date:
+        return "날짜 정보 없음"
+    
+    try:
+        # ISO 형식 파싱 (예: "2025-12-30T10:30:00+09:00")
+        if 'T' in pub_date:
+            date_str = pub_date.split('T')[0]
+            dt = datetime.strptime(date_str, "%Y-%m-%d")
+        else:
+            dt = datetime.strptime(pub_date, "%Y-%m-%d")
+        
+        # 한국어 형식: "2025.12.30 (화)"
+        weekdays = ["월", "화", "수", "목", "금", "토", "일"]
+        weekday = weekdays[dt.weekday()]
+        return f"{dt.strftime('%Y.%m.%d')} ({weekday})"
+    except Exception:
+        return pub_date
+
+
 def send_slack_notification(articles: List[Dict]) -> bool:
     """
     Slack으로 일일 추천 기사를 전송합니다.
@@ -308,42 +344,99 @@ def send_slack_notification(articles: List[Dict]) -> bool:
     ]
     
     for idx, article in enumerate(top_5, 1):
-        title = article.get("title", "")
-        description = article.get("description", "")
+        # 기사 정보 추출 및 HTML 태그 제거
+        title = _clean_html_tags(article.get("title", ""))
+        description = _clean_html_tags(article.get("description", ""))
         link = article.get("link", "")
         score = article.get("relevance_score", 0)
+        pub_date = article.get("pubDate", "")
         
-        article_block = {
+        # 날짜 포맷팅
+        formatted_date = _format_date(pub_date)
+        
+        # 요약 정보 가져오기 (캐시에서)
+        article_id = link or title
+        try:
+            from cache_manager import get_cached_summary
+            summary = get_cached_summary(article_id)
+        except Exception:
+            summary = None
+        
+        # 기사 제목 (제목만 강조)
+        blocks.append({
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": f"*{idx}. {title}*\n{description[:200]}...",
+                "text": f"*{idx}. {title}*",
             },
-        }
+        })
         
-        if link:
-            article_block["accessory"] = {
-                "type": "button",
-                "text": {
-                    "type": "plain_text",
-                    "text": "기사 보기",
-                },
-                "url": link,
-            }
-        
-        blocks.append(article_block)
-        
-        # 관련도 점수 표시
+        # 메타 정보 (날짜, 관련도 점수)
         blocks.append({
             "type": "context",
             "elements": [
                 {
                     "type": "mrkdwn",
-                    "text": f"관련도 점수: {score}점",
+                    "text": f"📅 {formatted_date}  |  📊 관련도: {score:.1f}/10점",
                 },
             ],
         })
         
+        # 기사 설명 (간략)
+        if description:
+            desc_short = description[:150] + "..." if len(description) > 150 else description
+            blocks.append({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": desc_short,
+                },
+            })
+        
+        # 요약이 있으면 표시
+        if summary:
+            # 요약 요약 (너무 길면 잘라내기)
+            summary_short = summary[:200] + "..." if len(summary) > 200 else summary
+            blocks.append({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"*📄 요약:*\n{summary_short}",
+                },
+            })
+        
+        # 버튼들
+        buttons = []
+        if link:
+            buttons.append({
+                "type": "button",
+                "text": {
+                    "type": "plain_text",
+                    "text": "🔗 기사 보기",
+                },
+                "url": link,
+                "action_id": f"view_article_{idx}",
+            })
+        
+        # 카드뉴스 생성 버튼 (Streamlit 앱 링크)
+        streamlit_url = os.getenv("STREAMLIT_APP_URL", "https://cardnews1-hd646zyxsbzawjaibtjgar.streamlit.app")
+        buttons.append({
+            "type": "button",
+            "text": {
+                "type": "plain_text",
+                "text": "📝 카드뉴스 생성",
+            },
+            "url": streamlit_url,
+            "action_id": f"create_cardnews_{idx}",
+        })
+        
+        if buttons:
+            blocks.append({
+                "type": "actions",
+                "elements": buttons,
+            })
+        
+        # 구분선
         if idx < len(top_5):
             blocks.append({"type": "divider"})
     
