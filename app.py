@@ -976,6 +976,16 @@ def main() -> None:
         articles = load_daily_recommendations()
         date_str = get_daily_recommendations_date()
         
+        # URL 파라미터로 기사 자동 선택 (슬랙에서 온 경우)
+        article_url = st.query_params.get("article_url")
+        auto_expand_idx = None
+        if article_url and articles:
+            for idx, article in enumerate(articles):
+                if article.get("link") == article_url:
+                    auto_expand_idx = idx
+                    st.info(f"📌 슬랙에서 선택한 기사: {article.get('title', '')[:50]}...")
+                    break
+        
         # 크롤링 버튼 (항상 표시) - 전체 너비 사용
         if st.button("🔄 지금 다시 크롤링하기", key="daily_crawl_button", use_container_width=True):
                 import subprocess
@@ -1337,7 +1347,9 @@ def main() -> None:
                 with col_title:
                     # 제목을 expander 헤더로 사용 (제목 클릭 시 확장)
                     expander_key = f"article_expander_{idx}"
-                    with st.expander(title, expanded=False):
+                    # URL 파라미터로 온 기사는 자동으로 확장
+                    is_expanded = (auto_expand_idx == idx) if auto_expand_idx is not None else False
+                    with st.expander(title, expanded=is_expanded):
                         # 상세 정보는 expander 내부에 표시 (전체 너비 사용)
                         _render_article_details(article, title, description, link, pub_date, score, idx)
                 
