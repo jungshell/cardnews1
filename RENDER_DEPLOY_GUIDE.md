@@ -42,10 +42,21 @@
 3. **"Web Service"** 선택
 
 ### 2.2 GitHub 저장소 연결
-1. **"Connect account"** 또는 **"Connect GitHub"** 클릭 (처음이라면)
-2. GitHub 계정 권한 승인
-3. 저장소 목록에서 `jungshell/cardnews1` 찾기
-4. 저장소 클릭하여 선택
+
+**방법 1: Public Git Repository 탭 사용 (권장)**
+1. 상단 탭에서 **"Public Git Repository"** 클릭
+2. **"Repository URL"** 입력란에 다음 입력:
+   ```
+   https://github.com/jungshell/cardnews1
+   ```
+3. **"Continue"** 버튼 클릭
+
+**방법 2: Git Provider 탭 사용 (저장소가 보이지 않을 때)**
+1. **"Git Provider"** 탭에서 저장소 목록 확인
+2. `cardnews1`이 보이지 않으면:
+   - **"Credentials"** 드롭다운에서 **"Configure in GitHub"** 클릭
+   - GitHub에서 Render 앱 권한 확인 및 업데이트
+   - 또는 **"Public Git Repository"** 탭 사용 (방법 1)
 
 ---
 
