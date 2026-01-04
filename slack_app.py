@@ -4,6 +4,8 @@ import json
 import hashlib
 import hmac
 import time
+from datetime import datetime
+import pytz
 from flask import Flask, request, jsonify
 from typing import Dict, Optional
 import requests
@@ -13,6 +15,18 @@ from daily_recommendations import load_daily_recommendations
 from gemini_api import generate_cardnews_with_gemini, summarize_with_gemini
 from card_parser import parse_card_script
 from image_prep import prepare_card_images, create_images_zip
+
+# 한국 시간대 설정
+KST = pytz.timezone('Asia/Seoul')
+
+def get_kst_now() -> datetime:
+    """한국 시간(서울) 기준 현재 시간을 반환합니다."""
+    return datetime.now(KST)
+
+def log_with_kst(message: str):
+    """KST 시간과 함께 로그를 출력합니다."""
+    kst_time = get_kst_now().strftime("%Y-%m-%d %H:%M:%S KST")
+    print(f"[{kst_time}] {message}", flush=True)
 
 app = Flask(__name__)
 
@@ -218,7 +232,7 @@ def handle_create_cardnews(payload: Dict, article: Dict) -> Dict:
                     timeout=10
                 )
             except Exception as e:
-                print(f"[슬랙 메시지 전송 오류] {e}")
+                log_with_kst(f"[슬랙 메시지 전송 오류] {e}")
         
         return jsonify({
             "response_type": "in_channel",
@@ -229,8 +243,8 @@ def handle_create_cardnews(payload: Dict, article: Dict) -> Dict:
     except Exception as e:
         import traceback
         error_msg = str(e)
-        print(f"[카드뉴스 생성 오류] {error_msg}")
-        print(traceback.format_exc())
+        log_with_kst(f"[카드뉴스 생성 오류] {error_msg}")
+        log_with_kst(traceback.format_exc())
         
         return jsonify({
             "response_type": "ephemeral",
@@ -316,37 +330,37 @@ def handle_command():
     """Slack Slash Command 처리"""
     try:
         if not verify_slack_request(request):
-            print("[Slack Command] 요청 검증 실패", flush=True)
+            log_with_kst("[Slack Command] 요청 검증 실패")
             return jsonify({"error": "Invalid request"}), 403
         
         command_text = request.form.get('text', '').strip()
         user_id = request.form.get('user_id')
         channel_id = request.form.get('channel_id')
         
-        print(f"[Slack Command] 명령어: /cardnews {command_text}, 사용자: {user_id}, 채널: {channel_id}", flush=True)
+        log_with_kst(f"[Slack Command] 명령어: /cardnews {command_text}, 사용자: {user_id}, 채널: {channel_id}")
         
         # /cardnews 1 → 첫 번째 기사
         # /cardnews → 전체 목록
         try:
             articles = load_daily_recommendations()
-            print(f"[Slack Command] 기사 로드 완료: {len(articles)}개", flush=True)
+            log_with_kst(f"[Slack Command] 기사 로드 완료: {len(articles)}개")
         except Exception as e:
-            print(f"[Slack Command] 기사 로드 오류: {e}", flush=True)
+            log_with_kst(f"[Slack Command] 기사 로드 오류: {e}")
             import traceback
-            print(traceback.format_exc(), flush=True)
+            log_with_kst(traceback.format_exc())
             return jsonify({
                 "response_type": "ephemeral",
                 "text": f"❌ 기사 데이터를 불러오는 중 오류가 발생했습니다: {str(e)}"
             }), 200
         
         if not articles:
-            print(f"[Slack Command] 기사 데이터 없음", flush=True)
+            log_with_kst("[Slack Command] 기사 데이터 없음")
             return jsonify({
                 "response_type": "ephemeral",
                 "text": "❌ 추천 기사가 없습니다. 먼저 크롤링을 실행해주세요."
             }), 200
-    
-    if command_text.isdigit():
+        
+        if command_text.isdigit():
         # 특정 기사 선택
         idx = int(command_text) - 1
         if 0 <= idx < len(articles):
@@ -418,8 +432,8 @@ def handle_command():
     except Exception as e:
         import traceback
         error_msg = str(e)
-        print(f"[Slack Command] 처리 오류: {error_msg}", flush=True)
-        print(traceback.format_exc(), flush=True)
+        log_with_kst(f"[Slack Command] 처리 오류: {error_msg}")
+        log_with_kst(traceback.format_exc())
         
         return jsonify({
             "response_type": "ephemeral",
