@@ -361,73 +361,73 @@ def handle_command():
             }), 200
         
         if command_text.isdigit():
-        # 특정 기사 선택
-        idx = int(command_text) - 1
-        if 0 <= idx < len(articles):
-            article = articles[idx]
-            return handle_create_cardnews({
-                'channel': {'id': channel_id},
-                'user': {'id': user_id},
-                'response_url': None
-            }, article)
+            # 특정 기사 선택
+            idx = int(command_text) - 1
+            if 0 <= idx < len(articles):
+                article = articles[idx]
+                return handle_create_cardnews({
+                    'channel': {'id': channel_id},
+                    'user': {'id': user_id},
+                    'response_url': None
+                }, article)
+            else:
+                return jsonify({
+                    "response_type": "ephemeral",
+                    "text": f"❌ {idx + 1}번 기사가 없습니다. (총 {len(articles)}개)"
+                }), 200
         else:
-            return jsonify({
-                "response_type": "ephemeral",
-                "text": f"❌ {idx + 1}번 기사가 없습니다. (총 {len(articles)}개)"
-            }), 200
-    else:
-        # 전체 목록 표시
-        blocks = [
-            {
-                "type": "header",
-                "text": {
-                    "type": "plain_text",
-                    "text": "📰 추천 기사 목록",
-                },
-            },
-            {
-                "type": "divider",
-            },
-        ]
-        
-        for idx, article in enumerate(articles[:10], 1):  # 최대 10개
-            title = article.get('title', '')
-            score = article.get('relevance_score', 0)
-            
-            blocks.append({
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*{idx}. {title[:80]}*\n관련도: {score:.1f}/10점",
-                },
-                "accessory": {
-                    "type": "button",
+            # 전체 목록 표시
+            blocks = [
+                {
+                    "type": "header",
                     "text": {
                         "type": "plain_text",
-                        "text": "생성",
+                        "text": "📰 추천 기사 목록",
                     },
-                    "value": str(idx),
-                    "action_id": f"create_cardnews_{idx}",
                 },
+                {
+                    "type": "divider",
+                },
+            ]
+            
+            for idx, article in enumerate(articles[:10], 1):  # 최대 10개
+                title = article.get('title', '')
+                score = article.get('relevance_score', 0)
+                
+                blocks.append({
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"*{idx}. {title[:80]}*\n관련도: {score:.1f}/10점",
+                    },
+                    "accessory": {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "생성",
+                        },
+                        "value": str(idx),
+                        "action_id": f"create_cardnews_{idx}",
+                    },
+                })
+                
+                if idx < min(len(articles), 10):
+                    blocks.append({"type": "divider"})
+            
+            blocks.append({
+                "type": "context",
+                "elements": [
+                    {
+                        "type": "mrkdwn",
+                        "text": f"사용법: `/cardnews 1` (1번 기사 생성) 또는 버튼 클릭",
+                    },
+                ],
             })
             
-            if idx < min(len(articles), 10):
-                blocks.append({"type": "divider"})
-        
-        blocks.append({
-            "type": "context",
-            "elements": [
-                {
-                    "type": "mrkdwn",
-                    "text": f"사용법: `/cardnews 1` (1번 기사 생성) 또는 버튼 클릭",
-                },
-            ],
-        })
-        
-        return jsonify({
-            "response_type": "ephemeral",
-            "blocks": blocks
-        }), 200
+            return jsonify({
+                "response_type": "ephemeral",
+                "blocks": blocks
+            }), 200
     
     except Exception as e:
         import traceback
