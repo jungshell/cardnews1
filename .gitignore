@@ -13,7 +13,9 @@ ENV/
 .env
 
 # 데이터 및 캐시
-data/
+data/*
+!data/daily_recommendations.json
+!data/history.json
 cache/
 logs/
 
