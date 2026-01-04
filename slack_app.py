@@ -28,6 +28,20 @@ def log_with_kst(message: str):
     kst_time = get_kst_now().strftime("%Y-%m-%d %H:%M:%S KST")
     print(f"[{kst_time}] {message}", flush=True)
 
+def clean_html_tags(text: str) -> str:
+    """HTML 태그를 제거하고 텍스트만 반환합니다."""
+    import re
+    if not text:
+        return ""
+    # HTML 태그 제거
+    text = re.sub(r'<[^>]+>', '', text)
+    # HTML 엔티티 디코딩
+    text = text.replace('&quot;', '"').replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>')
+    text = text.replace('&nbsp;', ' ').replace('&#39;', "'").replace('&apos;', "'")
+    # 연속된 공백 정리
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
+
 app = Flask(__name__)
 
 # 환경 변수
@@ -104,8 +118,8 @@ def handle_create_cardnews(payload: Dict, article: Dict) -> Dict:
     channel_id = payload.get('channel', {}).get('id')
     user_id = payload.get('user', {}).get('id')
     
-    title = article.get('title', '')
-    description = article.get('description', '')
+    title = clean_html_tags(article.get('title', ''))
+    description = clean_html_tags(article.get('description', ''))
     link = article.get('link', '')
     article_id = link or title
     
@@ -254,8 +268,8 @@ def handle_create_cardnews(payload: Dict, article: Dict) -> Dict:
 
 def handle_view_summary(payload: Dict, article: Dict) -> Dict:
     """요약 보기 처리"""
-    title = article.get('title', '')
-    description = article.get('description', '')
+    title = clean_html_tags(article.get('title', ''))
+    description = clean_html_tags(article.get('description', ''))
     link = article.get('link', '')
     article_id = link or title
     
@@ -391,7 +405,7 @@ def handle_command():
             ]
             
             for idx, article in enumerate(articles[:10], 1):  # 최대 10개
-                title = article.get('title', '')
+                title = clean_html_tags(article.get('title', ''))
                 score = article.get('relevance_score', 0)
                 
                 blocks.append({
