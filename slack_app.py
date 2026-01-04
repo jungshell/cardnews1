@@ -329,6 +329,7 @@ def handle_command():
         # /cardnews → 전체 목록
         try:
             articles = load_daily_recommendations()
+            print(f"[Slack Command] 기사 로드 완료: {len(articles)}개", flush=True)
         except Exception as e:
             print(f"[Slack Command] 기사 로드 오류: {e}", flush=True)
             import traceback
@@ -339,6 +340,7 @@ def handle_command():
             }), 200
         
         if not articles:
+            print(f"[Slack Command] 기사 데이터 없음", flush=True)
             return jsonify({
                 "response_type": "ephemeral",
                 "text": "❌ 추천 기사가 없습니다. 먼저 크롤링을 실행해주세요."
