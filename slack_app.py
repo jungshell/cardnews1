@@ -314,22 +314,35 @@ def handle_view_summary(payload: Dict, article: Dict) -> Dict:
 @app.route('/slack/command', methods=['POST'])
 def handle_command():
     """Slack Slash Command 처리"""
-    if not verify_slack_request(request):
-        return jsonify({"error": "Invalid request"}), 403
-    
-    command_text = request.form.get('text', '').strip()
-    user_id = request.form.get('user_id')
-    channel_id = request.form.get('channel_id')
-    
-    # /cardnews 1 → 첫 번째 기사
-    # /cardnews → 전체 목록
-    articles = load_daily_recommendations()
-    
-    if not articles:
-        return jsonify({
-            "response_type": "ephemeral",
-            "text": "❌ 추천 기사가 없습니다. 먼저 크롤링을 실행해주세요."
-        }), 200
+    try:
+        if not verify_slack_request(request):
+            print("[Slack Command] 요청 검증 실패", flush=True)
+            return jsonify({"error": "Invalid request"}), 403
+        
+        command_text = request.form.get('text', '').strip()
+        user_id = request.form.get('user_id')
+        channel_id = request.form.get('channel_id')
+        
+        print(f"[Slack Command] 명령어: /cardnews {command_text}, 사용자: {user_id}, 채널: {channel_id}", flush=True)
+        
+        # /cardnews 1 → 첫 번째 기사
+        # /cardnews → 전체 목록
+        try:
+            articles = load_daily_recommendations()
+        except Exception as e:
+            print(f"[Slack Command] 기사 로드 오류: {e}", flush=True)
+            import traceback
+            print(traceback.format_exc(), flush=True)
+            return jsonify({
+                "response_type": "ephemeral",
+                "text": f"❌ 기사 데이터를 불러오는 중 오류가 발생했습니다: {str(e)}"
+            }), 200
+        
+        if not articles:
+            return jsonify({
+                "response_type": "ephemeral",
+                "text": "❌ 추천 기사가 없습니다. 먼저 크롤링을 실행해주세요."
+            }), 200
     
     if command_text.isdigit():
         # 특정 기사 선택
@@ -398,6 +411,17 @@ def handle_command():
         return jsonify({
             "response_type": "ephemeral",
             "blocks": blocks
+        }), 200
+    
+    except Exception as e:
+        import traceback
+        error_msg = str(e)
+        print(f"[Slack Command] 처리 오류: {error_msg}", flush=True)
+        print(traceback.format_exc(), flush=True)
+        
+        return jsonify({
+            "response_type": "ephemeral",
+            "text": f"❌ 오류 발생: {error_msg}"
         }), 200
 
 
