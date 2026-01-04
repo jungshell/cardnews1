@@ -1,15 +1,23 @@
 """로깅 시스템 모듈"""
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from typing import Optional
+
+
+# 한국 시간대 (UTC+9)
+KST = timezone(timedelta(hours=9))
+
+def get_kst_now() -> datetime:
+    """한국 시간(서울) 기준 현재 시간을 반환합니다."""
+    return datetime.now(KST)
 
 
 LOG_DIR = os.path.join(os.path.dirname(__file__), "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
 
-LOG_FILE = os.path.join(LOG_DIR, f"app_{datetime.now().strftime('%Y%m%d')}.log")
-ERROR_LOG_FILE = os.path.join(LOG_DIR, f"error_{datetime.now().strftime('%Y%m%d')}.log")
+LOG_FILE = os.path.join(LOG_DIR, f"app_{get_kst_now().strftime('%Y%m%d')}.log")
+ERROR_LOG_FILE = os.path.join(LOG_DIR, f"error_{get_kst_now().strftime('%Y%m%d')}.log")
 
 
 def setup_logger(name: str = "cardnews", level: int = logging.INFO) -> logging.Logger:
@@ -30,8 +38,15 @@ def setup_logger(name: str = "cardnews", level: int = logging.INFO) -> logging.L
     if logger.handlers:
         return logger
     
-    # 포맷터 설정
-    formatter = logging.Formatter(
+    # 포맷터 설정 (한국 시간 기준)
+    class KSTFormatter(logging.Formatter):
+        def formatTime(self, record, datefmt=None):
+            dt = datetime.fromtimestamp(record.created, tz=KST)
+            if datefmt:
+                return dt.strftime(datefmt)
+            return dt.strftime("%Y-%m-%d %H:%M:%S")
+    
+    formatter = KSTFormatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     )
