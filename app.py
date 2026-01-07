@@ -1209,6 +1209,8 @@ def main() -> None:
                         st.caption(f"🕐 크롤링 시간: {crawl_time_str}")
             
             # 정렬 적용
+            # daily_fetch.py에서 이미 4일 이내 기사만 필터링하여 저장했으므로,
+            # 여기서는 필터링하지 않고 그대로 표시합니다.
             sorted_articles = articles.copy()
             if sort_by == "관련도 점수 (내림차순)":
                 sorted_articles.sort(key=lambda x: x.get("relevance_score", 0), reverse=True)
@@ -1216,145 +1218,6 @@ def main() -> None:
                 sorted_articles.sort(key=lambda x: x.get("pubDate", ""), reverse=True)
             elif sort_by == "날짜 (오래된순)":
                 sorted_articles.sort(key=lambda x: x.get("pubDate", ""))
-            
-            # 오늘 기준 4일 이내 기사만 필터링 (네이버 검색 결과와 동일하게)
-            from datetime import datetime, timedelta
-            filtered_articles = []
-            today = get_kst_now()
-            today_date = today.date()
-            
-            # 검색 키워드 목록 (점수 재계산용)
-            search_keywords = [
-                "충남콘텐츠진흥원",
-                "충콘진",
-                "천안그린스타트업타운",
-                "김곡미",
-                "충남콘텐츠코리아랩",
-                "충남콘텐츠기업지원센터",
-                "충남글로벌게임센터",
-                "충남음악창작소",
-                "충남 e스포츠",
-            ]
-            
-            # 점수 재계산 함수 (10점 만점) - 순환 import 방지를 위해 직접 구현
-            def recalculate_score(article):
-                score = 0.0
-                title = article.get("title", "").lower()
-                description = article.get("description", "").lower()
-                
-                # 주요 키워드와 기타 키워드 구분
-                main_keywords = ["충남콘텐츠진흥원", "충콘진"]
-                other_keywords = [k for k in search_keywords if k not in main_keywords]
-                
-                # 제목 매칭 (최대 5점)
-                title_score = 0.0
-                for keyword in main_keywords:
-                    if keyword.lower() in title:
-                        title_score += 2.5
-                for keyword in other_keywords:
-                    if keyword.lower() in title:
-                        title_score += 0.3
-                title_score = min(title_score, 5.0)
-                score += title_score
-                
-                # 설명 매칭 (최대 3점)
-                desc_score = 0.0
-                for keyword in main_keywords:
-                    if keyword.lower() in description:
-                        desc_score += 1.5
-                for keyword in other_keywords:
-                    if keyword.lower() in description:
-                        desc_score += 0.2
-                desc_score = min(desc_score, 3.0)
-                score += desc_score
-                
-                # 최근 기사 보너스 (최대 2점) - 크롤링 날짜 기준
-                pub_date = article.get("pubDate", "")
-                if pub_date and crawl_date_str:
-                    try:
-                        if "T" in pub_date:
-                            date_str = pub_date.split("T")[0]
-                            article_date = datetime.strptime(date_str, "%Y-%m-%d")
-                        else:
-                            # 다른 형식 처리
-                            import re
-                            if re.match(r"^[A-Za-z]{3},\s*\d{1,2}\s+[A-Za-z]{2,3}", pub_date):
-                                month_map = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
-                                            "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12,
-                                            "No": 11, "De": 12}
-                                parts = pub_date.split()
-                                if len(parts) >= 3:
-                                    day = int(parts[1].rstrip(","))
-                                    month_name = parts[2]
-                                    month = month_map.get(month_name, 11)
-                                    year = int(parts[3]) if len(parts) >= 4 else get_kst_now().year
-                                    article_date = datetime(year, month, day)
-                                else:
-                                    return min(score, 10.0)
-                            elif re.match(r"^\d{4}-\d{2}-\d{2}", pub_date):
-                                article_date = datetime.strptime(pub_date[:10], "%Y-%m-%d")
-                            else:
-                                return min(score, 10.0)
-                        
-                        # 크롤링 날짜 기준으로 일수 차이 계산
-                        days_diff = (crawl_date - article_date).days
-                        if days_diff <= 4 and days_diff >= 0:
-                            bonus = 2.0 - (days_diff * 0.375)
-                            score += bonus
-                    except:
-                        pass
-                
-                return min(score, 10.0)
-            
-            for article in sorted_articles:
-                pub_date = article.get("pubDate", "")
-                if pub_date:
-                    try:
-                        # 날짜 파싱
-                        if "T" in pub_date:
-                            date_str = pub_date.split("T")[0]
-                            article_date = datetime.strptime(date_str, "%Y-%m-%d")
-                        else:
-                            # 다른 형식 처리
-                            import re
-                            if re.match(r"^[A-Za-z]{3},\s*\d{1,2}\s+[A-Za-z]{2,3}", pub_date):
-                                month_map = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
-                                            "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12,
-                                            "No": 11, "De": 12}
-                                parts = pub_date.split()
-                                if len(parts) >= 3:
-                                    day = int(parts[1].rstrip(","))
-                                    month_name = parts[2]
-                                    month = month_map.get(month_name, 11)
-                                    year = int(parts[3]) if len(parts) >= 4 else get_kst_now().year
-                                    article_date = datetime(year, month, day)
-                                else:
-                                    continue
-                            elif re.match(r"^\d{4}-\d{2}-\d{2}", pub_date):
-                                article_date = datetime.strptime(pub_date[:10], "%Y-%m-%d")
-                            else:
-                                continue
-                        
-                        # 날짜를 KST로 변환
-                        if article_date.tzinfo is None:
-                            article_date = KST.localize(article_date)
-                        else:
-                            article_date = article_date.astimezone(KST)
-                        
-                        # 날짜만 비교 (시간 제외)
-                        article_date_only = article_date.date()
-                        days_diff = (today_date - article_date_only).days
-                        
-                        # 오늘 기준 4일 이내 기사만 포함
-                        if days_diff <= 4 and days_diff >= 0:
-                            # 점수 재계산 (10점 만점으로)
-                            article["relevance_score"] = recalculate_score(article)
-                            filtered_articles.append(article)
-                    except:
-                        # 날짜 파싱 실패 시 제외
-                        continue
-            
-            sorted_articles = filtered_articles
             
             st.write(f"총 {len(sorted_articles)}개의 추천 기사가 있습니다. (오늘 기준 4일 내)")
             
