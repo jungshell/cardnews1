@@ -62,12 +62,14 @@ def add_crawl_history(keyword: str, article_count: int) -> None:
     data = _load_history()
     data.setdefault("crawls", [])
     now_kst = get_kst_now()
+    # 타임존 정보를 포함한 ISO 형식으로 저장 (예: "2025-01-07T11:29:00+09:00")
+    timestamp_str = now_kst.isoformat(timespec="seconds")
     data["crawls"].append(
         {
             "date": now_kst.strftime("%Y-%m-%d"),
             "keyword": keyword,
             "article_count": article_count,
-            "timestamp": now_kst.isoformat(timespec="seconds"),
+            "timestamp": timestamp_str,
         }
     )
     _save_history(data)

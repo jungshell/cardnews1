@@ -594,24 +594,27 @@ def get_crawl_time_display() -> Optional[str]:
         if timestamp_str:
             try:
                 # ISO 형식 파싱 (예: "2025-12-24T00:22:14" 또는 "2025-12-24T00:22:14+09:00")
-                dt_utc = None
+                dt_kst = None
                 if "T" in timestamp_str:
-                    dt_str = timestamp_str.split("+")[0].split("Z")[0]  # 타임존 제거
-                    if len(dt_str) == 19:  # "2025-12-24T00:22:14"
-                        dt_utc = datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S")
-                        # naive datetime을 UTC로 간주
-                        dt_utc = pytz.utc.localize(dt_utc)
+                    # 타임존 정보가 있는 경우
+                    if "+" in timestamp_str or "Z" in timestamp_str:
+                        dt_kst = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+                        if dt_kst.tzinfo is None:
+                            # 타임존 정보가 없으면 KST로 간주
+                            dt_kst = KST.localize(dt_kst)
+                        else:
+                            # 타임존 정보가 있으면 KST로 변환
+                            dt_kst = dt_kst.astimezone(KST)
                     else:
-                        dt_utc = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
-                        if dt_utc.tzinfo is None:
-                            dt_utc = pytz.utc.localize(dt_utc)
+                        # 타임존 정보가 없는 경우 (기존 데이터 호환성)
+                        # "2025-12-24T00:22:14" 형식 -> KST로 간주
+                        dt_str = timestamp_str.split("T")[0] + " " + timestamp_str.split("T")[1]
+                        dt_naive = datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S")
+                        dt_kst = KST.localize(dt_naive)
                 else:
-                    dt_utc = datetime.fromisoformat(timestamp_str)
-                    if dt_utc.tzinfo is None:
-                        dt_utc = pytz.utc.localize(dt_utc)
-                
-                # UTC를 KST로 변환
-                dt_kst = dt_utc.astimezone(KST)
+                    # 타임존 정보가 없는 경우 KST로 간주
+                    dt_naive = datetime.fromisoformat(timestamp_str)
+                    dt_kst = KST.localize(dt_naive)
                 
                 # 한국어 요일
                 weekdays = ["월", "화", "수", "목", "금", "토", "일"]
