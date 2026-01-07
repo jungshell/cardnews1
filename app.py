@@ -1214,10 +1214,23 @@ def main() -> None:
             elif sort_by == "날짜 (오래된순)":
                 sorted_articles.sort(key=lambda x: x.get("pubDate", ""))
             
-            # 크롤링 날짜 기준 4일 내의 기사만 필터링 및 점수 재계산
-            from datetime import datetime
-            today = get_kst_now()
+            # 크롤링 날짜 기준으로 필터링 (크롤링 날짜 기준 30일 내의 기사만 표시)
+            from datetime import datetime, timedelta
             filtered_articles = []
+            
+            # 크롤링 날짜 가져오기
+            crawl_date_str = get_daily_recommendations_date()
+            if crawl_date_str:
+                try:
+                    crawl_date = datetime.strptime(crawl_date_str, "%Y-%m-%d")
+                    # 크롤링 날짜 기준 30일 전까지의 기사 포함
+                    cutoff_date = crawl_date - timedelta(days=30)
+                except:
+                    # 크롤링 날짜 파싱 실패 시 오늘 기준 30일 전
+                    cutoff_date = get_kst_now() - timedelta(days=30)
+            else:
+                # 크롤링 날짜가 없으면 오늘 기준 30일 전
+                cutoff_date = get_kst_now() - timedelta(days=30)
             
             # 검색 키워드 목록 (점수 재계산용)
             search_keywords = [
@@ -1264,9 +1277,9 @@ def main() -> None:
                 desc_score = min(desc_score, 3.0)
                 score += desc_score
                 
-                # 최근 기사 보너스 (최대 2점)
+                # 최근 기사 보너스 (최대 2점) - 크롤링 날짜 기준
                 pub_date = article.get("pubDate", "")
-                if pub_date:
+                if pub_date and crawl_date_str:
                     try:
                         if "T" in pub_date:
                             date_str = pub_date.split("T")[0]
@@ -1292,8 +1305,9 @@ def main() -> None:
                             else:
                                 return min(score, 10.0)
                         
-                        days_diff = (today - article_date).days
-                        if days_diff <= 4:
+                        # 크롤링 날짜 기준으로 일수 차이 계산
+                        days_diff = (crawl_date - article_date).days
+                        if days_diff <= 4 and days_diff >= 0:
                             bonus = 2.0 - (days_diff * 0.375)
                             score += bonus
                     except:
@@ -1330,8 +1344,8 @@ def main() -> None:
                             else:
                                 continue
                         
-                        days_diff = (today - article_date).days
-                        if days_diff <= 4:
+                        # 크롤링 날짜 기준 30일 내의 기사만 포함
+                        if article_date >= cutoff_date:
                             # 점수 재계산 (10점 만점으로)
                             article["relevance_score"] = recalculate_score(article)
                             filtered_articles.append(article)
@@ -1341,7 +1355,7 @@ def main() -> None:
             
             sorted_articles = filtered_articles
             
-            st.write(f"총 {len(sorted_articles)}개의 추천 기사가 있습니다. (크롤링 날짜 기준 4일 내)")
+            st.write(f"총 {len(sorted_articles)}개의 추천 기사가 있습니다. (크롤링 날짜 기준 30일 내)")
             
             # 기사 목록을 테이블 형식으로 표시 (각 열 왼쪽 정렬)
             for idx, article in enumerate(sorted_articles):
