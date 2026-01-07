@@ -2,9 +2,11 @@
 import os
 import sys
 import time
+import re
 from datetime import datetime
 from difflib import SequenceMatcher
 from typing import Dict, List
+import pytz
 
 import requests
 from dotenv import load_dotenv
@@ -192,17 +194,51 @@ def calculate_relevance_score(article: Dict, keywords: List[str]) -> float:
     pub_date = article.get("pubDate", "")
     if pub_date:
         try:
-            # ISO 형식 파싱 (예: "2024-12-24T09:00:00+09:00")
-            date_str = pub_date.split("T")[0]
-            article_date = datetime.strptime(date_str, "%Y-%m-%d")
-            today = datetime.now()
-            days_diff = (today - article_date).days
+            from datetime import datetime as dt
+            import pytz
             
-            # 최근 4일 이내면 보너스 점수 (4일 전: 0.5점, 당일: 2점)
-            if days_diff <= 4:
-                bonus = 2.0 - (days_diff * 0.375)  # 0일: 2점, 1일: 1.625점, 2일: 1.25점, 3일: 0.875점, 4일: 0.5점
-                score += bonus
-        except Exception:
+            # 한국 시간대
+            kst = pytz.timezone('Asia/Seoul')
+            today_kst = dt.now(kst)
+            
+            # 날짜 파싱 (여러 형식 지원)
+            article_date = None
+            if "T" in pub_date:
+                date_str = pub_date.split("T")[0]
+                article_date = dt.strptime(date_str, "%Y-%m-%d")
+            elif re.match(r"^[A-Za-z]{3},\s*\d{1,2}\s+[A-Za-z]{2,3}", pub_date):
+                # "Thu, 27 Nov 2025 11:12:00 +0900" 형식
+                import re
+                month_map = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
+                            "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
+                parts = pub_date.split()
+                if len(parts) >= 4:
+                    day = int(parts[1].rstrip(","))
+                    month_name = parts[2]
+                    month = month_map.get(month_name, 11)
+                    year = int(parts[3])
+                    article_date = dt(year, month, day)
+            elif re.match(r"^\d{4}-\d{2}-\d{2}", pub_date):
+                article_date = dt.strptime(pub_date[:10], "%Y-%m-%d")
+            
+            if article_date:
+                # naive datetime을 KST로 간주
+                if article_date.tzinfo is None:
+                    article_date = kst.localize(article_date)
+                else:
+                    article_date = article_date.astimezone(kst)
+                
+                # 날짜만 비교 (시간 제외)
+                today_date = today_kst.date()
+                article_date_only = article_date.date()
+                days_diff = (today_date - article_date_only).days
+                
+                # 최근 4일 이내면 보너스 점수 (4일 전: 0.5점, 당일: 2점)
+                if days_diff <= 4 and days_diff >= 0:
+                    bonus = 2.0 - (days_diff * 0.375)  # 0일: 2점, 1일: 1.625점, 2일: 1.25점, 3일: 0.875점, 4일: 0.5점
+                    score += bonus
+        except Exception as e:
+            logger.debug(f"날짜 파싱 오류: {pub_date} - {e}")
             pass
     
     # 최대 10점으로 제한
@@ -240,10 +276,60 @@ def fetch_daily_recommendations() -> List[Dict]:
     unique_articles = remove_duplicate_articles(all_articles)
     logger.info(f"중복 제거 후: {len(unique_articles)}개 기사 (제거: {len(all_articles) - len(unique_articles)}개)")
     
+    # 오늘 기준 4일 이내 기사만 필터링 (네이버 검색 결과와 동일하게)
+    kst = pytz.timezone('Asia/Seoul')
+    today_kst = datetime.now(kst)
+    today_date = today_kst.date()
+    
+    logger.info("오늘 기준 4일 이내 기사 필터링 중...")
+    recent_articles = []
+    for article in unique_articles:
+        pub_date = article.get("pubDate", "")
+        if pub_date:
+            try:
+                article_date = None
+                # 날짜 파싱 (여러 형식 지원)
+                if "T" in pub_date:
+                    date_str = pub_date.split("T")[0]
+                    article_date = datetime.strptime(date_str, "%Y-%m-%d")
+                elif re.match(r"^[A-Za-z]{3},\s*\d{1,2}\s+[A-Za-z]{2,3}", pub_date):
+                    # "Thu, 27 Nov 2025 11:12:00 +0900" 형식
+                    month_map = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
+                                "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
+                    parts = pub_date.split()
+                    if len(parts) >= 4:
+                        day = int(parts[1].rstrip(","))
+                        month_name = parts[2]
+                        month = month_map.get(month_name, 11)
+                        year = int(parts[3])
+                        article_date = datetime(year, month, day)
+                elif re.match(r"^\d{4}-\d{2}-\d{2}", pub_date):
+                    article_date = datetime.strptime(pub_date[:10], "%Y-%m-%d")
+                
+                if article_date:
+                    # naive datetime을 KST로 간주
+                    if article_date.tzinfo is None:
+                        article_date = kst.localize(article_date)
+                    else:
+                        article_date = article_date.astimezone(kst)
+                    
+                    # 날짜만 비교 (시간 제외)
+                    article_date_only = article_date.date()
+                    days_diff = (today_date - article_date_only).days
+                    
+                    # 오늘 기준 4일 이내 기사만 포함
+                    if days_diff <= 4 and days_diff >= 0:
+                        recent_articles.append(article)
+            except Exception as e:
+                logger.debug(f"날짜 파싱 오류 (기사 제외): {pub_date} - {e}")
+                continue
+    
+    logger.info(f"4일 이내 기사: {len(recent_articles)}개 (필터링 전: {len(unique_articles)}개)")
+    
     # 관련도 점수 계산 (전체 제목 추출 전에 먼저 점수 계산)
     logger.info("관련도 점수 계산 중...")
     scored_articles = []
-    for idx, article in enumerate(unique_articles, 1):
+    for idx, article in enumerate(recent_articles, 1):
         score = calculate_relevance_score(article, SEARCH_KEYWORDS)
         # 10점 만점으로 제한 (혹시 모를 오버플로우 방지)
         score = min(score, 10.0)
