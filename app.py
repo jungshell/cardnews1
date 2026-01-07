@@ -510,11 +510,38 @@ def _render_article_details(article: Dict, title: str, description: str, link: s
                             st.write(f"**본문**: {card.get('body', '')}")
                         
                         img_data = prepare_card_images(card)
-                        
+
+                        # 플랫폼별 프롬프트 선택
+                        prompts = img_data.get("prompts") or {
+                            "copilot": img_data.get("prompt", ""),
+                        }
+                        prompt_options = [
+                            "Copilot / Bing (DALL·E)",
+                            "Google Gemini",
+                            "로컬 / Stable Diffusion 계열",
+                        ]
+                        prompt_key_map = {
+                            "Copilot / Bing (DALL·E)": "copilot",
+                            "Google Gemini": "gemini",
+                            "로컬 / Stable Diffusion 계열": "local",
+                        }
+                        default_option = "Copilot / Bing (DALL·E)"
+
+                        selected_option = st.selectbox(
+                            "프롬프트 버전 선택",
+                            prompt_options,
+                            index=prompt_options.index(default_option),
+                            key=f"daily_prompt_mode_{article_id}_{idx}_{card_idx}",
+                            help="Copilot/Bing, Gemini, 로컬(Stable Diffusion) 중에서 사용할 프롬프트 버전을 선택하세요.",
+                        )
+
+                        selected_key = prompt_key_map.get(selected_option, "copilot")
+                        selected_prompt = prompts.get(selected_key) or img_data.get("prompt", "")
+
                         st.text_area(
                             "AI 이미지 생성 프롬프트",
-                            img_data["prompt"],
-                            height=150,
+                            selected_prompt,
+                            height=180,
                             key=f"daily_prompt_{article_id}_{idx}_{card_idx}",
                         )
                         
