@@ -3,6 +3,14 @@ import json
 import os
 from datetime import datetime
 from typing import Any, Dict, List
+import pytz
+
+# 한국 시간대 설정
+KST = pytz.timezone('Asia/Seoul')
+
+def get_kst_now() -> datetime:
+    """한국 시간(서울) 기준 현재 시간을 반환합니다."""
+    return datetime.now(KST)
 
 
 BASE_DIR = os.path.dirname(__file__)
@@ -53,12 +61,13 @@ def add_crawl_history(keyword: str, article_count: int) -> None:
     """
     data = _load_history()
     data.setdefault("crawls", [])
+    now_kst = get_kst_now()
     data["crawls"].append(
         {
-            "date": datetime.now().strftime("%Y-%m-%d"),
+            "date": now_kst.strftime("%Y-%m-%d"),
             "keyword": keyword,
             "article_count": article_count,
-            "timestamp": datetime.now().isoformat(timespec="seconds"),
+            "timestamp": now_kst.isoformat(timespec="seconds"),
         }
     )
     _save_history(data)

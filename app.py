@@ -4,9 +4,17 @@ import os
 import re
 from datetime import datetime
 from typing import Dict, List, Optional
+import pytz
 
 import streamlit as st
 from dotenv import load_dotenv
+
+# 한국 시간대 설정
+KST = pytz.timezone('Asia/Seoul')
+
+def get_kst_now() -> datetime:
+    """한국 시간(서울) 기준 현재 시간을 반환합니다."""
+    return datetime.now(KST)
 
 from cache_manager import (
     get_cached_summary,
@@ -136,7 +144,7 @@ def _render_article_details(article: Dict, title: str, description: str, link: s
             if "T" in pub_date:
                 date_str = pub_date.split("T")[0]
                 article_date = datetime.strptime(date_str, "%Y-%m-%d")
-                today = datetime.now()
+                today = get_kst_now()
                 days_diff = (today - article_date).days
                 if days_diff <= 4:
                     bonus_score = 2.0 - (days_diff * 0.375)
@@ -571,6 +579,7 @@ def _render_article_details(article: Dict, title: str, description: str, link: s
 def get_crawl_time_display() -> Optional[str]:
     """
     크롤링 시간을 표시 형식으로 반환합니다.
+    한국 시간(서울)으로 변환하여 표시합니다.
     
     Returns:
         "25.12.26.(금) 11:05" 형식의 문자열. 없으면 None.
@@ -585,21 +594,31 @@ def get_crawl_time_display() -> Optional[str]:
         if timestamp_str:
             try:
                 # ISO 형식 파싱 (예: "2025-12-24T00:22:14" 또는 "2025-12-24T00:22:14+09:00")
+                dt_utc = None
                 if "T" in timestamp_str:
                     dt_str = timestamp_str.split("+")[0].split("Z")[0]  # 타임존 제거
                     if len(dt_str) == 19:  # "2025-12-24T00:22:14"
-                        dt = datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S")
+                        dt_utc = datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S")
+                        # naive datetime을 UTC로 간주
+                        dt_utc = pytz.utc.localize(dt_utc)
                     else:
-                        dt = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
+                        dt_utc = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+                        if dt_utc.tzinfo is None:
+                            dt_utc = pytz.utc.localize(dt_utc)
                 else:
-                    dt = datetime.fromisoformat(timestamp_str)
+                    dt_utc = datetime.fromisoformat(timestamp_str)
+                    if dt_utc.tzinfo is None:
+                        dt_utc = pytz.utc.localize(dt_utc)
+                
+                # UTC를 KST로 변환
+                dt_kst = dt_utc.astimezone(KST)
                 
                 # 한국어 요일
                 weekdays = ["월", "화", "수", "목", "금", "토", "일"]
-                weekday = weekdays[dt.weekday()]
+                weekday = weekdays[dt_kst.weekday()]
                 
                 # "25.12.26.(금) 11:05" 형식
-                return f"{dt.strftime('%y.%m.%d')}.({weekday}) {dt.strftime('%H:%M')}"
+                return f"{dt_kst.strftime('%y.%m.%d')}.({weekday}) {dt_kst.strftime('%H:%M')}"
             except Exception:
                 pass
     
@@ -608,14 +627,22 @@ def get_crawl_time_display() -> Optional[str]:
     if os.path.exists(data_file):
         try:
             mtime = os.path.getmtime(data_file)
-            dt = datetime.fromtimestamp(mtime)
+            # 파일 mtime은 로컬 시간이므로, 시스템 타임존을 고려해 KST로 변환
+            dt_local = datetime.fromtimestamp(mtime)
+            # naive datetime을 시스템 타임존으로 간주하고 KST로 변환
+            if dt_local.tzinfo is None:
+                # 시스템이 UTC인 경우를 대비해 UTC로 간주 후 KST로 변환
+                dt_utc = pytz.utc.localize(dt_local)
+                dt_kst = dt_utc.astimezone(KST)
+            else:
+                dt_kst = dt_local.astimezone(KST)
             
             # 한국어 요일
             weekdays = ["월", "화", "수", "목", "금", "토", "일"]
-            weekday = weekdays[dt.weekday()]
+            weekday = weekdays[dt_kst.weekday()]
             
             # "25.12.26.(금) 11:05" 형식
-            return f"{dt.strftime('%y.%m.%d')}.({weekday}) {dt.strftime('%H:%M')}"
+            return f"{dt_kst.strftime('%y.%m.%d')}.({weekday}) {dt_kst.strftime('%H:%M')}"
         except Exception:
             pass
     
@@ -1073,6 +1100,53 @@ def main() -> None:
                         
                         if return_code == 0:
                             status_placeholder.success(f"✅ 크롤링 완료! ({elapsed:.1f}초 소요)")
+                            
+                            # GitHub에 자동 동기화 시도
+                            sync_status = st.empty()
+                            sync_status.info("🔄 GitHub에 동기화 중...")
+                            
+                            try:
+                                # git 명령어 실행
+                                git_commands = [
+                                    ["git", "add", "data/daily_recommendations.json", "data/history.json"],
+                                    ["git", "-c", "user.name=Streamlit App", "-c", "user.email=streamlit@cardnews.app", "commit", "-m", f"크롤링 결과 업데이트: {get_kst_now().strftime('%Y-%m-%d %H:%M:%S KST')}"],
+                                    ["git", "push", "origin", "main"]
+                                ]
+                                
+                                sync_success = True
+                                for cmd in git_commands:
+                                    result = subprocess.run(
+                                        cmd,
+                                        cwd=current_dir,
+                                        capture_output=True,
+                                        text=True,
+                                        timeout=30
+                                    )
+                                    if result.returncode != 0:
+                                        # git add는 파일이 없어도 실패할 수 있으므로 무시
+                                        if cmd[0] == "git" and cmd[1] == "add":
+                                            continue
+                                        # commit은 변경사항이 없으면 실패할 수 있으므로 무시
+                                        if cmd[0] == "git" and cmd[1] == "commit" and "nothing to commit" in result.stdout.lower():
+                                            sync_status.warning("ℹ️ 변경사항이 없어 커밋을 건너뜁니다.")
+                                            sync_success = None  # 실패도 성공도 아님
+                                            break
+                                        sync_success = False
+                                        sync_status.error(f"❌ Git 동기화 실패: {result.stderr}")
+                                        break
+                                
+                                if sync_success:
+                                    sync_status.success("✅ GitHub 동기화 완료!")
+                                elif sync_success is None:
+                                    pass  # 이미 메시지 표시됨
+                                else:
+                                    sync_status.warning("⚠️ GitHub 동기화 실패 (로컬에는 저장됨)")
+                                    
+                            except subprocess.TimeoutExpired:
+                                sync_status.warning("⏱️ GitHub 동기화 시간 초과 (로컬에는 저장됨)")
+                            except Exception as e:
+                                sync_status.warning(f"⚠️ GitHub 동기화 오류: {str(e)} (로컬에는 저장됨)")
+                            
                             # 로그를 텍스트 영역으로 표시 (전체 너비)
                             import html
                             log_text = '\n'.join(log_lines[-30:])
@@ -1142,7 +1216,7 @@ def main() -> None:
             
             # 크롤링 날짜 기준 4일 내의 기사만 필터링 및 점수 재계산
             from datetime import datetime
-            today = datetime.now()
+            today = get_kst_now()
             filtered_articles = []
             
             # 검색 키워드 목록 (점수 재계산용)
@@ -1209,7 +1283,7 @@ def main() -> None:
                                     day = int(parts[1].rstrip(","))
                                     month_name = parts[2]
                                     month = month_map.get(month_name, 11)
-                                    year = int(parts[3]) if len(parts) >= 4 else datetime.now().year
+                                    year = int(parts[3]) if len(parts) >= 4 else get_kst_now().year
                                     article_date = datetime(year, month, day)
                                 else:
                                     return min(score, 10.0)
@@ -1247,7 +1321,7 @@ def main() -> None:
                                     day = int(parts[1].rstrip(","))
                                     month_name = parts[2]
                                     month = month_map.get(month_name, 11)
-                                    year = int(parts[3]) if len(parts) >= 4 else datetime.now().year
+                                    year = int(parts[3]) if len(parts) >= 4 else get_kst_now().year
                                     article_date = datetime(year, month, day)
                                 else:
                                     continue
@@ -1317,7 +1391,7 @@ def main() -> None:
                                 if len(parts) >= 4:
                                     year = int(parts[3])
                                 else:
-                                    year = datetime.now().year
+                                    year = get_kst_now().year
                                 
                                 dt = datetime(year, month, day)
                         # "2024-12-24" 형식
