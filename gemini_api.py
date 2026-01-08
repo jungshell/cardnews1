@@ -1,7 +1,8 @@
 """Google Gemini API 모듈 - 요약 및 카드뉴스 문구 생성"""
 import os
 import time
-from typing import Optional, List
+from typing import Optional, List, Dict
+from datetime import datetime, timedelta
 
 import requests
 
@@ -10,10 +11,143 @@ GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1"
 MAX_RETRIES = 2
 RETRY_DELAY = 2  # 초
 
+# API 키 관리 (전역 변수)
+_api_keys: List[str] = []
+_current_key_index = 0
+_key_status: Dict[str, Dict] = {}  # {key: {"blocked_until": datetime, "error_count": int}}
+
+
+def _load_api_keys() -> List[str]:
+    """환경 변수에서 모든 Gemini API 키를 로드합니다."""
+    keys = []
+    
+    # 기본 키
+    main_key = os.getenv("GEMINI_API_KEY")
+    if main_key:
+        keys.append(main_key)
+    
+    # 추가 키들 (GEMINI_API_KEY_2, GEMINI_API_KEY_3, ...)
+    key_index = 2
+    while True:
+        key = os.getenv(f"GEMINI_API_KEY_{key_index}")
+        if not key:
+            break
+        keys.append(key)
+        key_index += 1
+    
+    # 중복 제거
+    seen = set()
+    unique_keys = []
+    for key in keys:
+        if key and key not in seen:
+            seen.add(key)
+            unique_keys.append(key)
+    
+    if unique_keys:
+        print(f"[API 키 로드] {len(unique_keys)}개의 API 키를 찾았습니다.", flush=True)
+    else:
+        print("[API 키 경고] API 키를 찾을 수 없습니다.", flush=True)
+    
+    return unique_keys
+
+
+def _get_available_api_key() -> Optional[str]:
+    """사용 가능한 API 키를 반환합니다 (순환 사용)."""
+    global _api_keys, _current_key_index, _key_status
+    
+    # 처음 호출 시 키 로드
+    if not _api_keys:
+        _api_keys = _load_api_keys()
+        if not _api_keys:
+            return None
+    
+    # 현재 시간
+    now = datetime.now()
+    
+    # 사용 가능한 키 찾기 (최대 3번 시도)
+    for _ in range(len(_api_keys) * 2):  # 모든 키를 최대 2번씩 확인
+        key = _api_keys[_current_key_index]
+        
+        # 키 상태 확인
+        status = _key_status.get(key, {})
+        blocked_until = status.get("blocked_until")
+        
+        # 차단 해제 시간이 지났거나 차단되지 않은 경우
+        if not blocked_until or now >= blocked_until:
+            # 다음 키로 이동
+            _current_key_index = (_current_key_index + 1) % len(_api_keys)
+            return key
+        
+        # 차단된 키는 건너뛰기
+        _current_key_index = (_current_key_index + 1) % len(_api_keys)
+    
+    # 모든 키가 차단된 경우, 가장 오래된 차단 해제 시간 확인
+    min_blocked_until = min(
+        (status.get("blocked_until", now) for status in _key_status.values()),
+        default=now
+    )
+    
+    if min_blocked_until > now:
+        wait_seconds = (min_blocked_until - now).total_seconds()
+        print(f"[API 키] 모든 키가 일시적으로 차단되었습니다. {wait_seconds:.0f}초 후 재시도 가능합니다.", flush=True)
+    
+    # 차단 해제 시간이 지난 키 중 하나 반환
+    for key in _api_keys:
+        status = _key_status.get(key, {})
+        blocked_until = status.get("blocked_until")
+        if not blocked_until or now >= blocked_until:
+            return key
+    
+    # 모든 키가 차단된 경우 첫 번째 키 반환 (재시도)
+    return _api_keys[0] if _api_keys else None
+
+
+def _mark_key_blocked(key: str, error_code: int, error_message: str = ""):
+    """API 키를 일시적으로 차단합니다."""
+    global _key_status
+    
+    status = _key_status.get(key, {"error_count": 0})
+    status["error_count"] = status.get("error_count", 0) + 1
+    
+    if error_code == 429:  # Rate limit
+        # 429 오류 메시지에서 재시도 시간 추출 시도
+        retry_after = 3600  # 기본값: 1시간 (일일 제한인 경우)
+        
+        if "retry in" in error_message.lower():
+            try:
+                # "Please retry in 34.235458584s" 형식에서 숫자 추출
+                import re
+                match = re.search(r'retry in ([\d.]+)s', error_message.lower())
+                if match:
+                    retry_after = float(match.group(1))
+                    # 최소 1시간으로 설정 (일일 제한이므로)
+                    retry_after = max(retry_after, 3600)
+            except:
+                pass
+        
+        # 일일 제한인 경우 다음날까지 차단
+        if "quota exceeded" in error_message.lower() or "free_tier" in error_message.lower():
+            # 다음날 자정(UTC)까지 차단 (약 24시간)
+            retry_after = 24 * 3600
+        
+        blocked_until = datetime.now() + timedelta(seconds=retry_after)
+        status["blocked_until"] = blocked_until
+        print(f"[API 키 차단] {key[:10]}... 키가 {retry_after/3600:.1f}시간 동안 차단되었습니다. (오류: {error_code})", flush=True)
+    elif error_code == 401:  # 인증 오류
+        # 인증 오류는 영구 차단
+        status["blocked_until"] = datetime.now() + timedelta(days=365)
+        print(f"[API 키 차단] {key[:10]}... 키가 인증 오류로 차단되었습니다.", flush=True)
+    else:
+        # 기타 오류는 5분간 차단
+        status["blocked_until"] = datetime.now() + timedelta(minutes=5)
+        print(f"[API 키 차단] {key[:10]}... 키가 5분간 차단되었습니다. (오류: {error_code})", flush=True)
+    
+    _key_status[key] = status
+
 
 def _get_available_models() -> List[str]:
     """사용 가능한 모델 목록을 조회합니다."""
-    api_key = os.getenv("GEMINI_API_KEY")
+    api_key = _get_available_api_key()
     if not api_key:
         return []
     
@@ -70,9 +204,9 @@ def _find_working_model() -> Optional[str]:
 
 def summarize_with_gemini(news_content: str, news_title: str) -> Optional[str]:
     """기사 내용을 350~450자 한글 요약으로 생성합니다. (직접 REST 호출, v1 엔드포인트 사용)"""
-    api_key = os.getenv("GEMINI_API_KEY")
+    api_key = _get_available_api_key()
     if not api_key:
-        print("GEMINI_API_KEY 환경 변수가 설정되지 않았습니다.")
+        print("사용 가능한 Gemini API 키를 찾을 수 없습니다.")
         return None
 
     # 사용 가능한 모델 찾기
@@ -105,54 +239,85 @@ def summarize_with_gemini(news_content: str, news_title: str) -> Optional[str]:
         ]
     }
 
-    # 재시도 로직
-    for attempt in range(MAX_RETRIES):
-        try:
-            resp = requests.post(
-                api_url,
-                params={"key": api_key},
-                json=payload,
-                timeout=30,
-            )
-            if resp.status_code == 429:  # Rate limit
+    # 재시도 로직 (여러 API 키 시도)
+    max_key_attempts = len(_api_keys) if _api_keys else 1
+    for key_attempt in range(max_key_attempts):
+        current_key = _get_available_api_key()
+        if not current_key:
+            print("[Gemini] 사용 가능한 API 키가 없습니다.")
+            return None
+        
+        print(f"[Gemini] API 키 사용: {current_key[:10]}... (시도 {key_attempt + 1}/{max_key_attempts})", flush=True)
+        
+        for attempt in range(MAX_RETRIES):
+            try:
+                resp = requests.post(
+                    api_url,
+                    params={"key": current_key},
+                    json=payload,
+                    timeout=30,
+                )
+                if resp.status_code == 429:  # Rate limit
+                    error_text = resp.text[:500] if len(resp.text) > 500 else resp.text
+                    _mark_key_blocked(current_key, 429, error_text)
+                    # 다른 키로 전환
+                    break
+                if resp.status_code == 401:  # 인증 오류
+                    error_text = resp.text[:500] if len(resp.text) > 500 else resp.text
+                    _mark_key_blocked(current_key, 401, error_text)
+                    # 다른 키로 전환
+                    break
+                if resp.status_code != 200:
+                    error_text = resp.text[:500] if len(resp.text) > 500 else resp.text
+                    print(f"[Gemini HTTP 오류] {resp.status_code} {error_text}", flush=True)
+                    _mark_key_blocked(current_key, resp.status_code, error_text)
+                    # 다른 키로 전환
+                    break
+
+                data = resp.json()
+                candidates = data.get("candidates", [])
+                if not candidates:
+                    print("[Gemini 응답 경고] candidates가 비어 있습니다.", flush=True)
+                    # 다른 키로 전환
+                    break
+
+                parts = candidates[0].get("content", {}).get("parts", [])
+                if not parts:
+                    print("[Gemini 응답 경고] parts가 비어 있습니다.", flush=True)
+                    # 다른 키로 전환
+                    break
+
+                result_text = parts[0].get("text", "")
+                if result_text:
+                    print(f"[Gemini 성공] {len(result_text)}자 생성됨 (키: {current_key[:10]}...)", flush=True)
+                    return result_text
+                else:
+                    print("[Gemini 응답 경고] text가 비어 있습니다.", flush=True)
+                    # 다른 키로 전환
+                    break
+                    
+            except requests.exceptions.Timeout:
+                print(f"[Gemini 타임아웃] (시도 {attempt + 1}/{MAX_RETRIES})", flush=True)
                 if attempt < MAX_RETRIES - 1:
-                    wait_time = RETRY_DELAY * (attempt + 1)
-                    print(f"[Gemini Rate Limit] {wait_time}초 대기 후 재시도...")
-                    time.sleep(wait_time)
-                    continue
-            if resp.status_code != 200:
-                print(f"[Gemini HTTP 오류] {resp.status_code} {resp.text}")
-                return None
-
-            data = resp.json()
-            candidates = data.get("candidates", [])
-            if not candidates:
-                print("[Gemini 응답 경고] candidates가 비어 있습니다.")
-                return None
-
-            parts = candidates[0].get("content", {}).get("parts", [])
-            if not parts:
-                print("[Gemini 응답 경고] parts가 비어 있습니다.")
-                return None
-
-            return parts[0].get("text", "")
-        except requests.exceptions.Timeout:
-            print(f"[Gemini 타임아웃] (시도 {attempt + 1}/{MAX_RETRIES})")
-            if attempt < MAX_RETRIES - 1:
-                time.sleep(RETRY_DELAY * (attempt + 1))
-        except Exception as e:
-            print(f"[Gemini 호출 오류] {e}")
-            if attempt < MAX_RETRIES - 1:
-                time.sleep(RETRY_DELAY * (attempt + 1))
+                    time.sleep(RETRY_DELAY * (attempt + 1))
+            except Exception as e:
+                print(f"[Gemini 호출 오류] {e}", flush=True)
+                if attempt < MAX_RETRIES - 1:
+                    time.sleep(RETRY_DELAY * (attempt + 1))
+        
+        # 현재 키로 실패했으므로 다음 키로 전환
+        if key_attempt < max_key_attempts - 1:
+            print(f"[Gemini] 다음 API 키로 전환합니다...", flush=True)
+            time.sleep(1)  # 키 전환 전 잠시 대기
     
     return None
 
 
 def generate_cardnews_with_gemini(news_content: str, news_title: str) -> Optional[str]:
     """기사 내용을 바탕으로 8장 카드뉴스 문구를 생성합니다."""
-    api_key = os.getenv("GEMINI_API_KEY")
+    api_key = _get_available_api_key()
     if not api_key:
-        print("GEMINI_API_KEY 환경 변수가 설정되지 않았습니다.")
+        print("사용 가능한 Gemini API 키를 찾을 수 없습니다.", flush=True)
         return None
 
     # 사용 가능한 모델 찾기
@@ -213,54 +378,78 @@ def generate_cardnews_with_gemini(news_content: str, news_title: str) -> Optiona
         ]
     }
 
-    # 재시도 로직
-    for attempt in range(MAX_RETRIES):
-        try:
-            resp = requests.post(
-                api_url,
-                params={"key": api_key},
-                json=payload,
-                timeout=60,  # 카드뉴스 생성은 시간이 더 걸릴 수 있음
-            )
-            if resp.status_code == 429:  # Rate limit
+    # 재시도 로직 (여러 API 키 시도)
+    max_key_attempts = len(_api_keys) if _api_keys else 1
+    for key_attempt in range(max_key_attempts):
+        current_key = _get_available_api_key()
+        if not current_key:
+            print("[Gemini] 사용 가능한 API 키가 없습니다.", flush=True)
+            return None
+        
+        print(f"[Gemini] API 키 사용: {current_key[:10]}... (시도 {key_attempt + 1}/{max_key_attempts})", flush=True)
+        
+        for attempt in range(MAX_RETRIES):
+            try:
+                resp = requests.post(
+                    api_url,
+                    params={"key": current_key},
+                    json=payload,
+                    timeout=60,  # 카드뉴스 생성은 시간이 더 걸릴 수 있음
+                )
+                if resp.status_code == 429:  # Rate limit
+                    error_text = resp.text[:500] if len(resp.text) > 500 else resp.text
+                    _mark_key_blocked(current_key, 429, error_text)
+                    # 다른 키로 전환
+                    break
+                if resp.status_code == 401:  # 인증 오류
+                    error_text = resp.text[:500] if len(resp.text) > 500 else resp.text
+                    _mark_key_blocked(current_key, 401, error_text)
+                    # 다른 키로 전환
+                    break
+                if resp.status_code != 200:
+                    error_text = resp.text[:500] if len(resp.text) > 500 else resp.text
+                    print(f"[Gemini HTTP 오류] {resp.status_code} {error_text}", flush=True)
+                    _mark_key_blocked(current_key, resp.status_code, error_text)
+                    # 다른 키로 전환
+                    break
+
+                data = resp.json()
+                candidates = data.get("candidates", [])
+                if not candidates:
+                    print("[Gemini 응답 경고] candidates가 비어 있습니다.", flush=True)
+                    print(f"[Gemini 응답] 전체 응답: {str(data)[:500]}", flush=True)
+                    # 다른 키로 전환
+                    break
+
+                parts = candidates[0].get("content", {}).get("parts", [])
+                if not parts:
+                    print("[Gemini 응답 경고] parts가 비어 있습니다.", flush=True)
+                    print(f"[Gemini 응답] candidates[0]: {str(candidates[0])[:500]}", flush=True)
+                    # 다른 키로 전환
+                    break
+
+                result_text = parts[0].get("text", "")
+                if not result_text:
+                    print("[Gemini 응답 경고] text가 비어 있습니다.", flush=True)
+                    # 다른 키로 전환
+                    break
+                
+                print(f"[Gemini 성공] {len(result_text)}자 생성됨 (키: {current_key[:10]}...)", flush=True)
+                return result_text
+                    
+            except requests.exceptions.Timeout:
+                print(f"[Gemini 타임아웃] (시도 {attempt + 1}/{MAX_RETRIES})", flush=True)
                 if attempt < MAX_RETRIES - 1:
-                    wait_time = RETRY_DELAY * (attempt + 1)
-                    print(f"[Gemini Rate Limit] {wait_time}초 대기 후 재시도...", flush=True)
-                    time.sleep(wait_time)
-                    continue
-            if resp.status_code != 200:
-                error_text = resp.text[:500] if len(resp.text) > 500 else resp.text
-                print(f"[Gemini HTTP 오류] {resp.status_code} {error_text}", flush=True)
-                return None
-
-            data = resp.json()
-            candidates = data.get("candidates", [])
-            if not candidates:
-                print("[Gemini 응답 경고] candidates가 비어 있습니다.", flush=True)
-                print(f"[Gemini 응답] 전체 응답: {str(data)[:500]}", flush=True)
-                return None
-
-            parts = candidates[0].get("content", {}).get("parts", [])
-            if not parts:
-                print("[Gemini 응답 경고] parts가 비어 있습니다.", flush=True)
-                print(f"[Gemini 응답] candidates[0]: {str(candidates[0])[:500]}", flush=True)
-                return None
-
-            result_text = parts[0].get("text", "")
-            if not result_text:
-                print("[Gemini 응답 경고] text가 비어 있습니다.", flush=True)
-                return None
-            
-            print(f"[Gemini 성공] {len(result_text)}자 생성됨", flush=True)
-            return result_text
-        except requests.exceptions.Timeout:
-            print(f"[Gemini 타임아웃] (시도 {attempt + 1}/{MAX_RETRIES})", flush=True)
-            if attempt < MAX_RETRIES - 1:
-                time.sleep(RETRY_DELAY * (attempt + 1))
-        except Exception as e:
-            print(f"[Gemini 호출 오류] {e}", flush=True)
-            if attempt < MAX_RETRIES - 1:
-                time.sleep(RETRY_DELAY * (attempt + 1))
+                    time.sleep(RETRY_DELAY * (attempt + 1))
+            except Exception as e:
+                print(f"[Gemini 호출 오류] {e}", flush=True)
+                if attempt < MAX_RETRIES - 1:
+                    time.sleep(RETRY_DELAY * (attempt + 1))
+        
+        # 현재 키로 실패했으므로 다음 키로 전환
+        if key_attempt < max_key_attempts - 1:
+            print(f"[Gemini] 다음 API 키로 전환합니다...", flush=True)
+            time.sleep(1)  # 키 전환 전 잠시 대기
     
     return None
 
