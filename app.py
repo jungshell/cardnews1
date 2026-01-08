@@ -1033,6 +1033,94 @@ def main() -> None:
         articles = load_daily_recommendations()
         date_str = get_daily_recommendations_date()
         
+        # 오늘 크롤링 여부 확인 및 자동 새로고침
+        from datetime import timedelta
+        import os
+        
+        data_file = os.path.join("data", "daily_recommendations.json")
+        today_kst = get_kst_now()
+        today_9am_kst = today_kst.replace(hour=9, minute=0, second=0, microsecond=0)
+        
+        # 오늘 9시 이후인지 확인
+        should_have_crawled = today_kst >= today_9am_kst
+        
+        if should_have_crawled and os.path.exists(data_file):
+            # 파일 수정 시간 확인
+            file_mtime = os.path.getmtime(data_file)
+            file_mtime_dt = datetime.fromtimestamp(file_mtime, tz=KST)
+            
+            # 오늘 9시 이후에 업데이트되었는지 확인
+            if file_mtime_dt < today_9am_kst:
+                # 오늘 크롤링이 아직 안 됨
+                hours_since_9am = (today_kst - today_9am_kst).total_seconds() / 3600
+                if hours_since_9am < 2:  # 9시~11시 사이
+                    st.info(f"⏰ 오늘 아침 9시 자동 크롤링이 아직 실행되지 않았습니다. (예상 시간: 오전 9시, 현재: {today_kst.strftime('%H:%M')})")
+                else:
+                    st.warning(f"⚠️ 오늘 아침 9시 자동 크롤링이 실행되지 않았습니다. (마지막 크롤링: {file_mtime_dt.strftime('%Y-%m-%d %H:%M')})")
+            else:
+                # 오늘 크롤링 완료
+                if file_mtime_dt.date() == today_kst.date():
+                    st.success(f"✅ 오늘 아침 9시 자동 크롤링 완료! (크롤링 시간: {file_mtime_dt.strftime('%H:%M')})")
+        
+        # 세션 상태에 마지막 체크 시간 저장 (너무 자주 체크하지 않도록)
+        last_check_key = "last_data_check_time"
+        auto_refresh_key = "auto_refresh_enabled"
+        
+        # 자동 새로고침 설정 (기본값: 켜짐)
+        if auto_refresh_key not in st.session_state:
+            st.session_state[auto_refresh_key] = True
+        
+        # 자동 새로고침 토글
+        col_toggle, col_info = st.columns([1, 4])
+        with col_toggle:
+            auto_refresh = st.checkbox(
+                "🔄 자동 새로고침",
+                value=st.session_state[auto_refresh_key],
+                key="auto_refresh_checkbox",
+                help="매 30초마다 최신 크롤링 결과를 자동으로 확인합니다."
+            )
+            st.session_state[auto_refresh_key] = auto_refresh
+        
+        with col_info:
+            if auto_refresh:
+                st.caption("💡 자동 새로고침이 켜져 있습니다. 오늘 9시 크롤링 결과가 자동으로 표시됩니다.")
+        
+        # 자동 새로고침 로직 (30초마다 체크)
+        if auto_refresh:
+            last_check = st.session_state.get(last_check_key, None)
+            current_time = today_kst.timestamp()
+            
+            if last_check is None or (current_time - last_check) >= 30:
+                # 파일 수정 시간 다시 확인
+                if os.path.exists(data_file):
+                    file_mtime = os.path.getmtime(data_file)
+                    file_mtime_dt = datetime.fromtimestamp(file_mtime, tz=KST)
+                    
+                    # 오늘 9시 이후에 업데이트되었고, 이전에 확인한 시간보다 최신이면 새로고침
+                    if file_mtime_dt >= today_9am_kst and file_mtime_dt.date() == today_kst.date():
+                        # 이전에 로드한 데이터와 비교
+                        prev_file_mtime = st.session_state.get("prev_file_mtime", 0)
+                        if file_mtime > prev_file_mtime:
+                            st.session_state["prev_file_mtime"] = file_mtime
+                            # 데이터 다시 로드
+                            articles = load_daily_recommendations()
+                            date_str = get_daily_recommendations_date()
+                            st.rerun()
+                
+                st.session_state[last_check_key] = current_time
+            
+            # 30초 후 자동 새로고침을 위한 JavaScript
+            st.markdown(
+                """
+                <script>
+                setTimeout(function() {
+                    window.location.reload();
+                }, 30000);
+                </script>
+                """,
+                unsafe_allow_html=True
+            )
+        
         # URL 파라미터로 기사 자동 선택 (슬랙에서 온 경우)
         article_url = st.query_params.get("article_url")
         auto_expand_idx = None
