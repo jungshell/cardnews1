@@ -45,6 +45,8 @@ def _load_api_keys() -> List[str]:
     
     if unique_keys:
         print(f"[API 키 로드] {len(unique_keys)}개의 API 키를 찾았습니다.", flush=True)
+        for idx, key in enumerate(unique_keys, 1):
+            print(f"[API 키 {idx}] {key[:15]}...", flush=True)
     else:
         print("[API 키 경고] API 키를 찾을 수 없습니다.", flush=True)
     
@@ -64,9 +66,21 @@ def _get_available_api_key() -> Optional[str]:
     # 현재 시간
     now = datetime.now()
     
-    # 사용 가능한 키 찾기 (최대 3번 시도)
-    for _ in range(len(_api_keys) * 2):  # 모든 키를 최대 2번씩 확인
+    # 사용 가능한 키 찾기 (모든 키 확인)
+    checked_keys = set()
+    start_index = _current_key_index
+    
+    for _ in range(len(_api_keys)):
         key = _api_keys[_current_key_index]
+        
+        # 이미 확인한 키는 건너뛰기
+        if key in checked_keys:
+            _current_key_index = (_current_key_index + 1) % len(_api_keys)
+            if _current_key_index == start_index:
+                break
+            continue
+        
+        checked_keys.add(key)
         
         # 키 상태 확인
         status = _key_status.get(key, {})
@@ -75,31 +89,35 @@ def _get_available_api_key() -> Optional[str]:
         # 차단 해제 시간이 지났거나 차단되지 않은 경우
         if not blocked_until or now >= blocked_until:
             # 다음 키로 이동
-            _current_key_index = (_current_key_index + 1) % len(_api_keys)
+            next_index = (_current_key_index + 1) % len(_api_keys)
+            _current_key_index = next_index
+            print(f"[API 키 선택] {key[:15]}... 사용 (인덱스: {_current_key_index-1 if _current_key_index > 0 else len(_api_keys)-1}/{len(_api_keys)})", flush=True)
             return key
         
-        # 차단된 키는 건너뛰기
+        # 차단된 키 정보 출력
+        if blocked_until:
+            wait_seconds = (blocked_until - now).total_seconds()
+            if wait_seconds > 0:
+                print(f"[API 키 건너뛰기] {key[:15]}... 차단됨 ({wait_seconds/3600:.1f}시간 남음)", flush=True)
+        
+        # 다음 키로 이동
         _current_key_index = (_current_key_index + 1) % len(_api_keys)
+        if _current_key_index == start_index:
+            break
     
     # 모든 키가 차단된 경우, 가장 오래된 차단 해제 시간 확인
-    min_blocked_until = min(
-        (status.get("blocked_until", now) for status in _key_status.values()),
-        default=now
-    )
+    if _key_status:
+        min_blocked_until = min(
+            (status.get("blocked_until", now) for status in _key_status.values() if status.get("blocked_until")),
+            default=now
+        )
+        
+        if min_blocked_until > now:
+            wait_seconds = (min_blocked_until - now).total_seconds()
+            print(f"[API 키] 모든 키가 일시적으로 차단되었습니다. {wait_seconds:.0f}초 ({wait_seconds/3600:.1f}시간) 후 재시도 가능합니다.", flush=True)
     
-    if min_blocked_until > now:
-        wait_seconds = (min_blocked_until - now).total_seconds()
-        print(f"[API 키] 모든 키가 일시적으로 차단되었습니다. {wait_seconds:.0f}초 후 재시도 가능합니다.", flush=True)
-    
-    # 차단 해제 시간이 지난 키 중 하나 반환
-    for key in _api_keys:
-        status = _key_status.get(key, {})
-        blocked_until = status.get("blocked_until")
-        if not blocked_until or now >= blocked_until:
-            return key
-    
-    # 모든 키가 차단된 경우 첫 번째 키 반환 (재시도)
-    return _api_keys[0] if _api_keys else None
+    # 모든 키가 차단된 경우 None 반환 (재시도하지 않음)
+    return None
 
 
 def _mark_key_blocked(key: str, error_code: int, error_message: str = ""):
@@ -240,14 +258,18 @@ def summarize_with_gemini(news_content: str, news_title: str) -> Optional[str]:
     }
 
     # 재시도 로직 (여러 API 키 시도)
+    if not _api_keys:
+        _api_keys = _load_api_keys()
     max_key_attempts = len(_api_keys) if _api_keys else 1
+    
     for key_attempt in range(max_key_attempts):
         current_key = _get_available_api_key()
         if not current_key:
-            print("[Gemini] 사용 가능한 API 키가 없습니다.")
+            if key_attempt == 0:
+                print("[Gemini] 사용 가능한 API 키가 없습니다. 모든 키가 차단되었거나 설정되지 않았습니다.", flush=True)
             return None
         
-        print(f"[Gemini] API 키 사용: {current_key[:10]}... (시도 {key_attempt + 1}/{max_key_attempts})", flush=True)
+        print(f"[Gemini] API 키 사용: {current_key[:15]}... (시도 {key_attempt + 1}/{max_key_attempts})", flush=True)
         
         for attempt in range(MAX_RETRIES):
             try:
@@ -379,14 +401,18 @@ def generate_cardnews_with_gemini(news_content: str, news_title: str) -> Optiona
     }
 
     # 재시도 로직 (여러 API 키 시도)
+    if not _api_keys:
+        _api_keys = _load_api_keys()
     max_key_attempts = len(_api_keys) if _api_keys else 1
+    
     for key_attempt in range(max_key_attempts):
         current_key = _get_available_api_key()
         if not current_key:
-            print("[Gemini] 사용 가능한 API 키가 없습니다.", flush=True)
+            if key_attempt == 0:
+                print("[Gemini] 사용 가능한 API 키가 없습니다. 모든 키가 차단되었거나 설정되지 않았습니다.", flush=True)
             return None
         
-        print(f"[Gemini] API 키 사용: {current_key[:10]}... (시도 {key_attempt + 1}/{max_key_attempts})", flush=True)
+        print(f"[Gemini] API 키 사용: {current_key[:15]}... (시도 {key_attempt + 1}/{max_key_attempts})", flush=True)
         
         for attempt in range(MAX_RETRIES):
             try:
