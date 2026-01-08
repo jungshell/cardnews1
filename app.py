@@ -1047,7 +1047,9 @@ def main() -> None:
         if should_have_crawled and os.path.exists(data_file):
             # 파일 수정 시간 확인
             file_mtime = os.path.getmtime(data_file)
-            file_mtime_dt = datetime.fromtimestamp(file_mtime, tz=KST)
+            # 타임스탬프를 UTC로 간주하고 KST로 변환
+            file_mtime_dt_utc = datetime.fromtimestamp(file_mtime, tz=pytz.utc)
+            file_mtime_dt = file_mtime_dt_utc.astimezone(KST)
             
             # 오늘 9시 이후에 업데이트되었는지 확인
             if file_mtime_dt < today_9am_kst:
@@ -1094,7 +1096,9 @@ def main() -> None:
                 # 파일 수정 시간 다시 확인
                 if os.path.exists(data_file):
                     file_mtime = os.path.getmtime(data_file)
-                    file_mtime_dt = datetime.fromtimestamp(file_mtime, tz=KST)
+                    # 타임스탬프를 UTC로 간주하고 KST로 변환
+                    file_mtime_dt_utc = datetime.fromtimestamp(file_mtime, tz=pytz.utc)
+                    file_mtime_dt = file_mtime_dt_utc.astimezone(KST)
                     
                     # 오늘 9시 이후에 업데이트되었고, 이전에 확인한 시간보다 최신이면 새로고침
                     if file_mtime_dt >= today_9am_kst and file_mtime_dt.date() == today_kst.date():
