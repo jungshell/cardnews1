@@ -258,6 +258,7 @@ def summarize_with_gemini(news_content: str, news_title: str) -> Optional[str]:
     }
 
     # 재시도 로직 (여러 API 키 시도)
+    global _api_keys
     if not _api_keys:
         _api_keys = _load_api_keys()
     max_key_attempts = len(_api_keys) if _api_keys else 1
@@ -401,6 +402,7 @@ def generate_cardnews_with_gemini(news_content: str, news_title: str) -> Optiona
     }
 
     # 재시도 로직 (여러 API 키 시도)
+    global _api_keys
     if not _api_keys:
         _api_keys = _load_api_keys()
     max_key_attempts = len(_api_keys) if _api_keys else 1
