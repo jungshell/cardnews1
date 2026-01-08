@@ -87,18 +87,31 @@ def _get_available_api_key() -> Optional[str]:
         blocked_until = status.get("blocked_until")
         
         # 차단 해제 시간이 지났거나 차단되지 않은 경우
-        if not blocked_until or now >= blocked_until:
-            # 다음 키로 이동
+        if not blocked_until:
+            # 차단되지 않은 키
             next_index = (_current_key_index + 1) % len(_api_keys)
             _current_key_index = next_index
-            print(f"[API 키 선택] {key[:15]}... 사용 (인덱스: {_current_key_index-1 if _current_key_index > 0 else len(_api_keys)-1}/{len(_api_keys)})", flush=True)
+            print(f"[API 키 선택] {key[:15]}... 사용 (차단되지 않음, 인덱스: {_current_key_index-1 if _current_key_index > 0 else len(_api_keys)-1}/{len(_api_keys)})", flush=True)
+            return key
+        elif now >= blocked_until:
+            # 차단 해제 시간이 지난 키 - 차단 상태 제거
+            if key in _key_status:
+                del _key_status[key]
+            next_index = (_current_key_index + 1) % len(_api_keys)
+            _current_key_index = next_index
+            print(f"[API 키 선택] {key[:15]}... 사용 (차단 해제됨, 인덱스: {_current_key_index-1 if _current_key_index > 0 else len(_api_keys)-1}/{len(_api_keys)})", flush=True)
             return key
         
         # 차단된 키 정보 출력
         if blocked_until:
             wait_seconds = (blocked_until - now).total_seconds()
-            if wait_seconds > 0:
+            if wait_seconds > 60:  # 1분 이상 남은 경우만 로그 출력
                 print(f"[API 키 건너뛰기] {key[:15]}... 차단됨 ({wait_seconds/3600:.1f}시간 남음)", flush=True)
+            elif wait_seconds > 0:
+                print(f"[API 키 건너뛰기] {key[:15]}... 차단됨 ({wait_seconds:.0f}초 남음)", flush=True)
+            else:
+                # 차단 해제 시간이 지났는데도 여기 도달했다는 것은 이상함
+                print(f"[API 키 디버그] {key[:15]}... 차단 해제 시간 지남 (차단: {blocked_until}, 현재: {now})", flush=True)
         
         # 다음 키로 이동
         _current_key_index = (_current_key_index + 1) % len(_api_keys)
