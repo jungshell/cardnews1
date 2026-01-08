@@ -26,8 +26,8 @@ def _load_api_keys() -> List[str]:
     if main_key:
         keys.append(main_key)
     
-    # 추가 키들 (GEMINI_API_KEY_2, GEMINI_API_KEY_3, ...)
-    key_index = 2
+    # 추가 키들 (GEMINI_API_KEY_1, GEMINI_API_KEY_2, GEMINI_API_KEY_3, ...)
+    key_index = 1
     while True:
         key = os.getenv(f"GEMINI_API_KEY_{key_index}")
         if not key:
