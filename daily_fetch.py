@@ -5,13 +5,17 @@ import time
 import re
 from datetime import datetime
 from difflib import SequenceMatcher
-from typing import Dict, List
+from typing import Dict, List, Optional
 import pytz
 
 import requests
 from dotenv import load_dotenv
 
-from daily_recommendations import load_daily_recommendations, save_daily_recommendations
+from daily_recommendations import (
+    load_daily_recommendations,
+    load_daily_recommendations_meta,
+    save_daily_recommendations,
+)
 from history_manager import add_crawl_history
 from logger import logger
 from naver_api import search_naver_news
@@ -245,7 +249,7 @@ def calculate_relevance_score(article: Dict, keywords: List[str]) -> float:
     return min(score, 10.0)
 
 
-def fetch_daily_recommendations() -> List[Dict]:
+def fetch_daily_recommendations() -> Dict[str, object]:
     """
     여러 키워드로 뉴스를 검색하고, 중복 제거 및 관련도 점수 계산 후 추천 기사를 반환합니다.
     
@@ -358,7 +362,13 @@ def fetch_daily_recommendations() -> List[Dict]:
     
     logger.info(f"완료: 상위 {len(top_articles)}개 기사 선정")
     
-    return top_articles
+    stats = {
+        "collected_count": len(all_articles),
+        "unique_count": len(unique_articles),
+        "recent_count": len(recent_articles),
+        "saved_count": len(top_articles),
+    }
+    return {"articles": top_articles, "stats": stats}
 
 
 def _clean_html_tags(text: str) -> str:
@@ -397,7 +407,7 @@ def _format_date(pub_date: str) -> str:
         return pub_date
 
 
-def send_slack_notification(articles: List[Dict]) -> bool:
+def send_slack_notification(articles: List[Dict], stats: Optional[Dict[str, int]] = None) -> bool:
     """
     Slack으로 일일 추천 기사를 전송합니다.
     
@@ -416,12 +426,23 @@ def send_slack_notification(articles: List[Dict]) -> bool:
     top_5 = articles[:5]
     
     # Block Kit 형식으로 메시지 구성
+    summary_text = (
+        f"총 수집 기사: {stats.get('recent_count', len(articles))}개  |  "
+        f"저장된 기사(상위): {stats.get('saved_count', len(articles))}개"
+    ) if stats else f"저장된 기사(상위): {len(articles)}개"
     blocks = [
         {
             "type": "header",
             "text": {
                 "type": "plain_text",
                 "text": "📰 오늘의 추천 기사",
+            },
+        },
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": f"*요약*  {summary_text}",
             },
         },
         {
@@ -567,8 +588,9 @@ def main():
         # Slack 알림만 전송
         log_and_print("Slack 알림만 전송 모드")
         articles = load_daily_recommendations()
+        stats = load_daily_recommendations_meta()
         if articles:
-            send_slack_notification(articles)
+            send_slack_notification(articles, stats)
         else:
             log_and_print("daily_recommendations.json 파일이 없습니다.", "error")
     else:
@@ -578,26 +600,29 @@ def main():
         log_and_print("=" * 60)
         
         try:
-            articles = fetch_daily_recommendations()
+            result = fetch_daily_recommendations()
+            articles = result.get("articles", [])
+            stats = result.get("stats", {})
             
             if articles:
                 # daily_recommendations.json에 저장
-                save_daily_recommendations(articles)
+                save_daily_recommendations(articles, meta=stats)
                 log_and_print(f"저장 완료: {len(articles)}개 기사를 daily_recommendations.json에 저장")
                 
                 # 크롤링 기록 저장
                 add_crawl_history("일일 자동 크롤링", len(articles))
                 
                 # Slack 알림 전송
-                send_slack_notification(articles)
+                send_slack_notification(articles, stats)
                 log_and_print(f"Slack 알림 전송 완료: {len(articles)}개 기사")
             else:
                 log_and_print("추천 기사를 찾을 수 없습니다.", "warning")
                 # 크롤링 실패 시 기존 데이터로 슬랙 알림 전송 (선택사항)
                 existing_articles = load_daily_recommendations()
+                existing_stats = load_daily_recommendations_meta()
                 if existing_articles:
                     log_and_print(f"기존 데이터로 Slack 알림 전송: {len(existing_articles)}개 기사")
-                    send_slack_notification(existing_articles)
+                    send_slack_notification(existing_articles, existing_stats)
                 else:
                     log_and_print("기존 데이터도 없어 Slack 알림을 전송하지 않습니다.", "warning")
         except Exception as e:
@@ -607,9 +632,10 @@ def main():
             # 오류 발생 시에도 기존 데이터로 슬랙 알림 전송
             try:
                 existing_articles = load_daily_recommendations()
+                existing_stats = load_daily_recommendations_meta()
                 if existing_articles:
                     log_and_print(f"오류 발생으로 기존 데이터로 Slack 알림 전송: {len(existing_articles)}개 기사")
-                    send_slack_notification(existing_articles)
+                    send_slack_notification(existing_articles, existing_stats)
             except Exception as e2:
                 log_and_print(f"기존 데이터 로드 및 Slack 알림 전송 실패: {e2}", "error")
     
