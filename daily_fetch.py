@@ -440,13 +440,6 @@ def send_slack_notification(articles: List[Dict]) -> bool:
         # 날짜 포맷팅
         formatted_date = _format_date(pub_date)
         
-        # 요약 정보 가져오기 (캐시에서)
-        article_id = link or title
-        try:
-            from cache_manager import get_cached_summary
-            summary = get_cached_summary(article_id)
-        except Exception:
-            summary = None
         
         # 기사 제목 (제목만 강조)
         blocks.append({
@@ -479,17 +472,6 @@ def send_slack_notification(articles: List[Dict]) -> bool:
                 },
             })
         
-        # 요약이 있으면 표시
-        if summary:
-            # 요약 요약 (너무 길면 잘라내기)
-            summary_short = summary[:200] + "..." if len(summary) > 200 else summary
-            blocks.append({
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*📄 요약:*\n{summary_short}",
-                },
-            })
         
         # 버튼들
         buttons = []
@@ -508,16 +490,6 @@ def send_slack_notification(articles: List[Dict]) -> bool:
         slack_app_url = os.getenv("SLACK_APP_URL")
         if slack_app_url:
             # Interactive 버튼 (Slack App 서버로 요청)
-            buttons.append({
-                "type": "button",
-                "text": {
-                    "type": "plain_text",
-                    "text": "📄 요약 보기",
-                },
-                "action_id": f"view_summary_{idx}",
-                "value": str(idx),
-            })
-            
             buttons.append({
                 "type": "button",
                 "text": {
@@ -605,20 +577,41 @@ def main():
         log_and_print("일일 자동 크롤링 시작")
         log_and_print("=" * 60)
         
-        articles = fetch_daily_recommendations()
-        
-        if articles:
-            # daily_recommendations.json에 저장
-            save_daily_recommendations(articles)
-            log_and_print(f"저장 완료: {len(articles)}개 기사를 daily_recommendations.json에 저장")
+        try:
+            articles = fetch_daily_recommendations()
             
-            # 크롤링 기록 저장
-            add_crawl_history("일일 자동 크롤링", len(articles))
-            
-            # Slack 알림 전송
-            send_slack_notification(articles)
-        else:
-            log_and_print("추천 기사를 찾을 수 없습니다.", "warning")
+            if articles:
+                # daily_recommendations.json에 저장
+                save_daily_recommendations(articles)
+                log_and_print(f"저장 완료: {len(articles)}개 기사를 daily_recommendations.json에 저장")
+                
+                # 크롤링 기록 저장
+                add_crawl_history("일일 자동 크롤링", len(articles))
+                
+                # Slack 알림 전송
+                send_slack_notification(articles)
+                log_and_print(f"Slack 알림 전송 완료: {len(articles)}개 기사")
+            else:
+                log_and_print("추천 기사를 찾을 수 없습니다.", "warning")
+                # 크롤링 실패 시 기존 데이터로 슬랙 알림 전송 (선택사항)
+                existing_articles = load_daily_recommendations()
+                if existing_articles:
+                    log_and_print(f"기존 데이터로 Slack 알림 전송: {len(existing_articles)}개 기사")
+                    send_slack_notification(existing_articles)
+                else:
+                    log_and_print("기존 데이터도 없어 Slack 알림을 전송하지 않습니다.", "warning")
+        except Exception as e:
+            log_and_print(f"크롤링 중 오류 발생: {e}", "error")
+            import traceback
+            log_and_print(traceback.format_exc(), "error")
+            # 오류 발생 시에도 기존 데이터로 슬랙 알림 전송
+            try:
+                existing_articles = load_daily_recommendations()
+                if existing_articles:
+                    log_and_print(f"오류 발생으로 기존 데이터로 Slack 알림 전송: {len(existing_articles)}개 기사")
+                    send_slack_notification(existing_articles)
+            except Exception as e2:
+                log_and_print(f"기존 데이터 로드 및 Slack 알림 전송 실패: {e2}", "error")
     
     log_and_print("=" * 60)
     log_and_print("완료")

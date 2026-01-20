@@ -5,6 +5,11 @@ import subprocess
 import sys
 import os
 
+# 스케줄러는 로컬 타임존 기준으로 동작하므로 KST 고정
+os.environ.setdefault("TZ", "Asia/Seoul")
+if hasattr(time, "tzset"):
+    time.tzset()
+
 
 def run_daily_fetch():
     """daily_fetch.py를 실행합니다."""
@@ -27,17 +32,14 @@ def run_slack_notification():
 
 
 def main():
-    """스케줄러 메인 루프"""
-    # UTC 시간 기준 (한국 시간 = UTC+9)
-    # 매일 23:55 UTC = 한국 시간 08:55
-    schedule.every().day.at("23:55").do(run_daily_fetch)
-    
-    # 매일 00:00 UTC = 한국 시간 09:00
-    schedule.every().day.at("00:00").do(run_slack_notification)
-    
+    """스케줄러 메인 루프 (KST 기준)"""
+    # KST 기준으로 고정
+    schedule.every().day.at("08:55").do(run_daily_fetch)
+    schedule.every().day.at("09:00").do(run_slack_notification)
+
     print("[스케줄러 시작]")
-    print("  - 크롤링: 매일 23:55 UTC (한국 시간 08:55)")
-    print("  - Slack 알림: 매일 00:00 UTC (한국 시간 09:00)")
+    print("  - 크롤링: 매일 08:55 KST")
+    print("  - Slack 알림: 매일 09:00 KST")
     print("  - 스케줄러 실행 중...")
     
     while True:
