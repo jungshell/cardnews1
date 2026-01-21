@@ -16,18 +16,8 @@ jobs:
       - name: Create backup archive
         run: |
           BACKUP_NAME="cardnews_3_backup_${{ github.run_id }}.tar.gz"
-          tar \
-            --exclude=".git" \
-            --exclude="venv" \
-            --exclude=".venv" \
-            --exclude="__pycache__" \
-            --exclude="cache" \
-            --exclude="logs" \
-            --exclude="*.log" \
-            --exclude="streamlit.log" \
-            --exclude="streamlit.pid" \
-            --exclude="*.zip" \
-            -czf "$BACKUP_NAME" .
+          # git archive를 사용하면 실행 중 변경 파일로 인한 tar 실패를 피할 수 있습니다.
+          git archive --format=tar.gz -o "$BACKUP_NAME" HEAD
           echo "BACKUP_NAME=$BACKUP_NAME" >> "$GITHUB_ENV"
 
       - name: Upload backup artifact
