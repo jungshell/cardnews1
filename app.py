@@ -1039,10 +1039,10 @@ def main() -> None:
         
         data_file = os.path.join("data", "daily_recommendations.json")
         today_kst = get_kst_now()
-        today_9am_kst = today_kst.replace(hour=9, minute=0, second=0, microsecond=0)
+        today_7am_kst = today_kst.replace(hour=7, minute=0, second=0, microsecond=0)
         
         # 오늘 9시 이후인지 확인
-        should_have_crawled = today_kst >= today_9am_kst
+        should_have_crawled = today_kst >= today_7am_kst
         
         if should_have_crawled and os.path.exists(data_file):
             # 파일 수정 시간 확인
@@ -1054,18 +1054,18 @@ def main() -> None:
             file_mtime_dt_utc = pytz.utc.localize(file_mtime_dt_naive)
             file_mtime_dt = file_mtime_dt_utc.astimezone(KST)
             
-            # 오늘 9시 이후에 업데이트되었는지 확인
-            if file_mtime_dt < today_9am_kst:
+            # 오늘 7시 이후에 업데이트되었는지 확인
+            if file_mtime_dt < today_7am_kst:
                 # 오늘 크롤링이 아직 안 됨
-                hours_since_9am = (today_kst - today_9am_kst).total_seconds() / 3600
-                if hours_since_9am < 2:  # 9시~11시 사이
-                    st.info(f"⏰ 오늘 아침 9시 자동 크롤링이 아직 실행되지 않았습니다. (예상 시간: 오전 9시, 현재: {today_kst.strftime('%H:%M')})")
+                hours_since_7am = (today_kst - today_7am_kst).total_seconds() / 3600
+                if hours_since_7am < 2:  # 7시~9시 사이
+                    st.info(f"⏰ 오늘 아침 7시 자동 크롤링이 아직 실행되지 않았습니다. (예상 시간: 오전 7시, 현재: {today_kst.strftime('%H:%M')})")
                 else:
-                    st.warning(f"⚠️ 오늘 아침 9시 자동 크롤링이 실행되지 않았습니다. (마지막 크롤링: {file_mtime_dt.strftime('%Y-%m-%d %H:%M')})")
+                    st.warning(f"⚠️ 오늘 아침 7시 자동 크롤링이 실행되지 않았습니다. (마지막 크롤링: {file_mtime_dt.strftime('%Y-%m-%d %H:%M')})")
             else:
                 # 오늘 크롤링 완료
                 if file_mtime_dt.date() == today_kst.date():
-                    st.success(f"✅ 오늘 아침 9시 자동 크롤링 완료! (크롤링 시간: {file_mtime_dt.strftime('%H:%M')})")
+                    st.success(f"✅ 오늘 아침 7시 자동 크롤링 완료! (크롤링 시간: {file_mtime_dt.strftime('%H:%M')})")
         
         # 세션 상태에 마지막 체크 시간 저장 (너무 자주 체크하지 않도록)
         last_check_key = "last_data_check_time"
@@ -1088,7 +1088,7 @@ def main() -> None:
         
         with col_info:
             if auto_refresh:
-                st.caption("💡 자동 새로고침이 켜져 있습니다. 오늘 9시 크롤링 결과가 자동으로 표시됩니다.")
+                st.caption("💡 자동 새로고침이 켜져 있습니다. 오늘 7시 크롤링 결과가 자동으로 표시됩니다.")
         
         # 자동 새로고침 로직 (30초마다 체크)
         if auto_refresh:
@@ -1106,8 +1106,8 @@ def main() -> None:
                     file_mtime_dt_utc = pytz.utc.localize(file_mtime_dt_naive)
                     file_mtime_dt = file_mtime_dt_utc.astimezone(KST)
                     
-                    # 오늘 9시 이후에 업데이트되었고, 이전에 확인한 시간보다 최신이면 새로고침
-                    if file_mtime_dt >= today_9am_kst and file_mtime_dt.date() == today_kst.date():
+                    # 오늘 7시 이후에 업데이트되었고, 이전에 확인한 시간보다 최신이면 새로고침
+                    if file_mtime_dt >= today_7am_kst and file_mtime_dt.date() == today_kst.date():
                         # 이전에 로드한 데이터와 비교
                         prev_file_mtime = st.session_state.get("prev_file_mtime", 0)
                         if file_mtime > prev_file_mtime:
@@ -1334,7 +1334,7 @@ def main() -> None:
                         st.caption(f"🕐 크롤링 시간: {crawl_time_str}")
             
             # 정렬 적용
-            # daily_fetch.py에서 이미 4일 이내 기사만 필터링하여 저장했으므로,
+            # daily_fetch.py에서 이미 36시간 이내 기사만 필터링하여 저장했으므로,
             # 여기서는 필터링하지 않고 그대로 표시합니다.
             sorted_articles = articles.copy()
             if sort_by == "관련도 점수 (내림차순)":
@@ -1344,7 +1344,7 @@ def main() -> None:
             elif sort_by == "날짜 (오래된순)":
                 sorted_articles.sort(key=lambda x: x.get("pubDate", ""))
             
-            st.write(f"총 {len(sorted_articles)}개의 추천 기사가 있습니다. (오늘 기준 4일 내)")
+            st.write(f"총 {len(sorted_articles)}개의 추천 기사가 있습니다. (크롤링 기준 36시간 내)")
             
             # 기사 목록을 테이블 형식으로 표시 (각 열 왼쪽 정렬)
             for idx, article in enumerate(sorted_articles):

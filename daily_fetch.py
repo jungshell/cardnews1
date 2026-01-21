@@ -195,53 +195,17 @@ def calculate_relevance_score(article: Dict, keywords: List[str]) -> float:
     desc_score = min(desc_score, 3.0)  # 최대 3점
     score += desc_score
     
-    # 3. 최근 기사 보너스 점수 (최대 2점)
+    # 3. 최근 기사 보너스 점수 (최대 2점, 36시간 내)
     pub_date = article.get("pubDate", "")
     if pub_date:
         try:
-            from datetime import datetime as dt
-            import pytz
-            
-            # 한국 시간대
-            kst = pytz.timezone('Asia/Seoul')
-            today_kst = dt.now(kst)
-            
-            # 날짜 파싱 (여러 형식 지원)
-            article_date = None
-            if "T" in pub_date:
-                date_str = pub_date.split("T")[0]
-                article_date = dt.strptime(date_str, "%Y-%m-%d")
-            elif re.match(r"^[A-Za-z]{3},\s*\d{1,2}\s+[A-Za-z]{2,3}", pub_date):
-                # "Thu, 27 Nov 2025 11:12:00 +0900" 형식
-                import re
-                month_map = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
-                            "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
-                parts = pub_date.split()
-                if len(parts) >= 4:
-                    day = int(parts[1].rstrip(","))
-                    month_name = parts[2]
-                    month = month_map.get(month_name, 11)
-                    year = int(parts[3])
-                    article_date = dt(year, month, day)
-            elif re.match(r"^\d{4}-\d{2}-\d{2}", pub_date):
-                article_date = dt.strptime(pub_date[:10], "%Y-%m-%d")
-            
+            now_kst = datetime.now(pytz.timezone('Asia/Seoul'))
+            article_date = _parse_pub_date_to_kst(pub_date)
             if article_date:
-                # naive datetime을 KST로 간주
-                if article_date.tzinfo is None:
-                    article_date = kst.localize(article_date)
-                else:
-                    article_date = article_date.astimezone(kst)
-                
-                # 날짜만 비교 (시간 제외)
-                today_date = today_kst.date()
-                article_date_only = article_date.date()
-                days_diff = (today_date - article_date_only).days
-                
-                # 최근 4일 이내면 보너스 점수 (4일 전: 0.5점, 당일: 2점)
-                if days_diff <= 4 and days_diff >= 0:
-                    bonus = 2.0 - (days_diff * 0.375)  # 0일: 2점, 1일: 1.625점, 2일: 1.25점, 3일: 0.875점, 4일: 0.5점
-                    score += bonus
+                hours_diff = (now_kst - article_date).total_seconds() / 3600.0
+                if 0 <= hours_diff <= 36:
+                    bonus = 2.0 * (1 - (hours_diff / 36.0))
+                    score += max(bonus, 0.0)
         except Exception as e:
             logger.debug(f"날짜 파싱 오류: {pub_date} - {e}")
             pass
@@ -309,10 +273,20 @@ def fetch_daily_recommendations() -> Dict[str, object]:
         # 10점 만점으로 제한 (혹시 모를 오버플로우 방지)
         score = min(score, 10.0)
         article["relevance_score"] = score
-        scored_articles.append(article)
+        if score > 0:
+            scored_articles.append(article)
     
     # 관련도 점수 내림차순 정렬
     scored_articles.sort(key=lambda x: x.get("relevance_score", 0), reverse=True)
+    if not scored_articles:
+        logger.warning("관련도 점수 0점 이하 기사만 있어 저장/전송을 건너뜁니다.")
+        stats = {
+            "collected_count": len(all_articles),
+            "unique_count": len(unique_articles),
+            "recent_count": len(recent_articles),
+            "saved_count": 0,
+        }
+        return {"articles": [], "stats": stats}
     
     # 상위 기사만 선정 (최대 50개)
     top_articles = scored_articles[:50]
