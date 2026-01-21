@@ -3,7 +3,8 @@ import os
 import sys
 import time
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
+from email.utils import parsedate_to_datetime
 from difflib import SequenceMatcher
 from typing import Dict, List, Optional
 import pytz
@@ -280,55 +281,25 @@ def fetch_daily_recommendations() -> Dict[str, object]:
     unique_articles = remove_duplicate_articles(all_articles)
     logger.info(f"중복 제거 후: {len(unique_articles)}개 기사 (제거: {len(all_articles) - len(unique_articles)}개)")
     
-    # 오늘 기준 4일 이내 기사만 필터링 (네이버 검색 결과와 동일하게)
+    # 크롤링 시점 기준 36시간 이내 기사만 필터링
     kst = pytz.timezone('Asia/Seoul')
-    today_kst = datetime.now(kst)
-    today_date = today_kst.date()
+    now_kst = datetime.now(kst)
+    cutoff_kst = now_kst - timedelta(hours=36)
     
-    logger.info("오늘 기준 4일 이내 기사 필터링 중...")
+    logger.info("크롤링 기준 36시간 이내 기사 필터링 중...")
     recent_articles = []
     for article in unique_articles:
         pub_date = article.get("pubDate", "")
         if pub_date:
             try:
-                article_date = None
-                # 날짜 파싱 (여러 형식 지원)
-                if "T" in pub_date:
-                    date_str = pub_date.split("T")[0]
-                    article_date = datetime.strptime(date_str, "%Y-%m-%d")
-                elif re.match(r"^[A-Za-z]{3},\s*\d{1,2}\s+[A-Za-z]{2,3}", pub_date):
-                    # "Thu, 27 Nov 2025 11:12:00 +0900" 형식
-                    month_map = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
-                                "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
-                    parts = pub_date.split()
-                    if len(parts) >= 4:
-                        day = int(parts[1].rstrip(","))
-                        month_name = parts[2]
-                        month = month_map.get(month_name, 11)
-                        year = int(parts[3])
-                        article_date = datetime(year, month, day)
-                elif re.match(r"^\d{4}-\d{2}-\d{2}", pub_date):
-                    article_date = datetime.strptime(pub_date[:10], "%Y-%m-%d")
-                
-                if article_date:
-                    # naive datetime을 KST로 간주
-                    if article_date.tzinfo is None:
-                        article_date = kst.localize(article_date)
-                    else:
-                        article_date = article_date.astimezone(kst)
-                    
-                    # 날짜만 비교 (시간 제외)
-                    article_date_only = article_date.date()
-                    days_diff = (today_date - article_date_only).days
-                    
-                    # 오늘 기준 4일 이내 기사만 포함
-                    if days_diff <= 4 and days_diff >= 0:
-                        recent_articles.append(article)
+                article_date = _parse_pub_date_to_kst(pub_date)
+                if article_date and cutoff_kst <= article_date <= now_kst:
+                    recent_articles.append(article)
             except Exception as e:
                 logger.debug(f"날짜 파싱 오류 (기사 제외): {pub_date} - {e}")
                 continue
     
-    logger.info(f"4일 이내 기사: {len(recent_articles)}개 (필터링 전: {len(unique_articles)}개)")
+    logger.info(f"36시간 이내 기사: {len(recent_articles)}개 (필터링 전: {len(unique_articles)}개)")
     
     # 관련도 점수 계산 (전체 제목 추출 전에 먼저 점수 계산)
     logger.info("관련도 점수 계산 중...")
@@ -384,6 +355,32 @@ def _clean_html_tags(text: str) -> str:
     # 연속된 공백 정리
     text = re.sub(r'\s+', ' ', text).strip()
     return text
+
+
+def _parse_pub_date_to_kst(pub_date: str) -> Optional[datetime]:
+    """기사 발행일 문자열을 KST datetime으로 변환합니다."""
+    if not pub_date:
+        return None
+    kst = pytz.timezone('Asia/Seoul')
+    try:
+        if 'T' in pub_date:
+            try:
+                dt = datetime.fromisoformat(pub_date.replace('Z', '+00:00'))
+            except ValueError:
+                date_str = pub_date.split('T')[0]
+                dt = datetime.strptime(date_str, "%Y-%m-%d")
+        elif re.match(r"^[A-Za-z]{3},\s*\d{1,2}\s+[A-Za-z]{2,3}", pub_date):
+            dt = parsedate_to_datetime(pub_date)
+        elif re.match(r"^\d{4}-\d{2}-\d{2}", pub_date):
+            dt = datetime.strptime(pub_date[:10], "%Y-%m-%d")
+        else:
+            return None
+
+        if dt.tzinfo is None:
+            return kst.localize(dt)
+        return dt.astimezone(kst)
+    except Exception:
+        return None
 
 
 def _format_date(pub_date: str) -> str:
