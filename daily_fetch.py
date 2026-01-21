@@ -194,6 +194,7 @@ def calculate_relevance_score(article: Dict, keywords: List[str]) -> float:
     
     desc_score = min(desc_score, 3.0)  # 최대 3점
     score += desc_score
+    base_score = title_score + desc_score
     
     # 3. 최근 기사 보너스 점수 (최대 2점, 36시간 내)
     pub_date = article.get("pubDate", "")
@@ -203,7 +204,7 @@ def calculate_relevance_score(article: Dict, keywords: List[str]) -> float:
             article_date = _parse_pub_date_to_kst(pub_date)
             if article_date:
                 hours_diff = (now_kst - article_date).total_seconds() / 3600.0
-                if 0 <= hours_diff <= 36:
+                if base_score > 0 and 0 <= hours_diff <= 36:
                     bonus = 2.0 * (1 - (hours_diff / 36.0))
                     score += max(bonus, 0.0)
         except Exception as e:
