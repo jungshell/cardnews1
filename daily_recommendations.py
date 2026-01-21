@@ -30,7 +30,7 @@ def load_daily_recommendations() -> List[Dict]:
         return []
 
 
-def save_daily_recommendations(articles: List[Dict]) -> None:
+def save_daily_recommendations(articles: List[Dict], meta: Optional[Dict] = None) -> None:
     """
     daily_recommendations.json 파일에 기사 목록을 저장합니다.
     
@@ -40,6 +40,7 @@ def save_daily_recommendations(articles: List[Dict]) -> None:
     data = {
         "date": datetime.now().strftime("%Y-%m-%d"),
         "articles": articles,
+        "meta": meta or {},
     }
     
     try:
@@ -66,4 +67,21 @@ def get_daily_recommendations_date() -> Optional[str]:
     except Exception:
         return None
 
+
+def load_daily_recommendations_meta() -> Dict:
+    """
+    daily_recommendations.json 파일의 메타 정보를 반환합니다.
+    
+    Returns:
+        메타 정보 딕셔너리. 없으면 빈 딕셔너리 반환.
+    """
+    if not os.path.exists(DAILY_RECOMMENDATIONS_FILE):
+        return {}
+    
+    try:
+        with open(DAILY_RECOMMENDATIONS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return data.get("meta", {}) or {}
+    except Exception:
+        return {}
 
