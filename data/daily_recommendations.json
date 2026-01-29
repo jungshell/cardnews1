@@ -1,22 +1,13 @@
 {
-  "date": "2026-01-28",
+  "date": "2026-01-29",
   "articles": [
-    {
-      "title": "<b>충남콘텐츠진흥원</b>, 2026년 지원사업 공유...김곡미 원장 &quot;현장 의견 적극...",
-      "originallink": "https://zdnet.co.kr/view/?no=20260128165545",
-      "link": "https://n.news.naver.com/mnews/article/092/0002408162?sid=103",
-      "description": "<b>충남콘텐츠진흥원</b>(원장 김곡미)은 28일 충남콘텐츠기업지원센터 이벤트홀에서 ‘2026년 지원사업 설명회’를 개최하고, 지원사업 주요 방향과 세부 내용을 현장에서 공유했다. 이번 설명회는 2026년도 <b>충남콘텐츠진흥원</b>... ",
-      "pubDate": "Wed, 28 Jan 2026 16:57:00 +0900",
-      "relevance_score": 5.897724954151234,
-      "full_title": "충남콘텐츠진흥원, 2026년 지원사업 공유...김곡미 원장 \"현장 의견 적극 반영\""
-    },
     {
       "title": "<b>충남콘텐츠진흥원</b>, 2026년 지원사업 안내… 기업·창작자 관심",
       "originallink": "https://www.gukjenews.com/news/articleView.html?idxno=3492111",
       "link": "https://www.gukjenews.com/news/articleView.html?idxno=3492111",
       "description": "2026년 지원사업 안내/<b>충남콘텐츠진흥원</b> 제공  (재)<b>충남콘텐츠진흥원</b>(이하 '진흥원', 원장 김곡미)은 1월 28일 충남콘텐츠기업지원센터 이벤트홀에서 열린 '2026년 지원사업 설명회'를 통해 올해 지원사업의 주요 방향과... ",
       "pubDate": "Wed, 28 Jan 2026 21:08:00 +0900",
-      "relevance_score": 5.83013236367284,
+      "relevance_score": 4.495779774074075,
       "full_title": "충남콘텐츠진흥원, 2026년 지원사업 안내… 기업·창작자 관심"
     },
     {
@@ -25,41 +16,14 @@
       "link": "http://www.sisanews24.co.kr/17971",
       "description": "© 시사뉴스24 (재)<b>충남콘텐츠진흥원</b>(이하 ‘진흥원’, 원장 김곡미)은 28일 충남콘텐츠기업지원센터 이벤트홀에서 열린 ‘2026년 지원사업 설명회’를 통해 올해 지원사업의 주요 방향과 세부 내용을 현장에서 공유하고... ",
       "pubDate": "Wed, 28 Jan 2026 20:42:00 +0900",
-      "relevance_score": 5.806058288858026,
+      "relevance_score": 4.4717056992746915,
       "full_title": "충남콘텐츠진흥원, 2026년 지원사업 공유…현장 설명·소통 ‘이해도 높여’:시사뉴스24"
-    },
-    {
-      "title": "<b>충남콘텐츠진흥원</b>, 2026년 지원사업 핵심 내용 공유",
-      "originallink": "http://www.gocj.net/news/articleView.html?idxno=145030",
-      "link": "http://www.gocj.net/news/articleView.html?idxno=145030",
-      "description": "(재)<b>충남콘텐츠진흥원</b>(이하 '진흥원', 원장 김곡미)은 1월 28일 충남콘텐츠기업지원센터 이벤트홀에서 열린 '2026년 지원사업 설명회'를 통해 올해 지원사업의 주요 방향과 세부 내용을 현장에서 공유하고, 도내 콘텐츠... ",
-      "pubDate": "Wed, 28 Jan 2026 16:38:00 +0900",
-      "relevance_score": 5.580132360972223,
-      "full_title": "충남콘텐츠진흥원, 2026년 지원사업 핵심 내용 공유"
-    },
-    {
-      "title": "<b>충남콘텐츠진흥원</b>, 2026년 지원사업 공개…AI 융합 본격화",
-      "originallink": "https://view.asiae.co.kr/article/2026012815374620780",
-      "link": "https://n.news.naver.com/mnews/article/277/0005713289?sid=102",
-      "description": "<b>충남콘텐츠진흥원</b>은 28일 '2026년 지원사업 설명회'를 열고 AI 융합을 핵심 축으로 한 연간 지원 전략과 세부 사업 내용을 공개했다. 진흥원은 이날 충남콘텐츠기업지원센터에서 설명회를 개최하고, 2026년도 지원사업의... ",
-      "pubDate": "Wed, 28 Jan 2026 15:37:00 +0900",
-      "relevance_score": 5.323650879074075,
-      "full_title": "충남콘텐츠진흥원, 2026년 지원사업 공개…AI 융합 본격화"
-    },
-    {
-      "title": "AI와 <b>콘텐츠</b>가 만나는 2026… <b>충남</b>, 창작자 맞춤형 지원 전략 공개",
-      "originallink": "https://www.newswhoplus.com/news/articleView.html?idxno=52745",
-      "link": "https://www.newswhoplus.com/news/articleView.html?idxno=52745",
-      "description": "<b>충남콘텐츠진흥원</b>(원장 김곡미)은 1월 28일 충남콘텐츠기업지원센터 이벤트홀에서 열린 '2026년 지원사업 설명회'를 통해 올해 콘텐츠 기업과 창작자들을 위한 맞춤형 지원 전략을 공개했다. 이번 설명회는 2026년... ",
-      "pubDate": "Wed, 28 Jan 2026 17:00:00 +0900",
-      "relevance_score": 3.100502732546296,
-      "full_title": "AI와 콘텐츠가 만나는 2026… 충남, 창작자 맞춤형 지원 전략 공개"
     }
   ],
   "meta": {
     "collected_count": 1600,
-    "unique_count": 817,
-    "recent_count": 6,
-    "saved_count": 6
+    "unique_count": 810,
+    "recent_count": 5,
+    "saved_count": 2
   }
 }
