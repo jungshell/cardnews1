@@ -1,29 +1,20 @@
 {
-  "date": "2026-02-25",
+  "date": "2026-02-27",
   "articles": [
     {
-      "title": "씨엔티테크, K팝 팬덤 플랫폼 'KDOL' 운영사 해시퍼플에 투자",
-      "originallink": "https://platum.kr/archives/282526",
-      "link": "https://platum.kr/archives/282526",
-      "description": "해시퍼플은 최근 <b>충남콘텐츠진흥원</b>이 주관한 '2025 스케일업 액셀러레이팅 프로그램' 최종 데모데이에서 대상을 수상하며 기술력을 인정받은 바 있다. 해시퍼플은 이번 투자를 바탕으로 팬덤 데이터를 활용한 AI 기반... ",
-      "pubDate": "Wed, 25 Feb 2026 18:04:00 +0900",
-      "relevance_score": 2.753465725817901,
-      "full_title": "씨엔티테크, K팝 팬덤 플랫폼 'KDOL' 운영사 해시퍼플에 투자"
-    },
-    {
-      "title": "지방선거 앞두고 천안·아산 기관장 임기 종료 잇따라",
-      "originallink": "https://www.daejonilbo.com/news/articleView.html?idxno=2259450",
-      "link": "https://n.news.naver.com/mnews/article/656/0000168332?sid=102",
-      "description": "<b>충남콘텐츠진흥원</b> 김곡미 원장의 임기는 지방선거 직전인 오는 5월까지다. 충남경제진흥원 한권희 원장의 임기는 2027년 9월까지다. 다만 충남도는 '정무·정책보좌공무원 및 출자·출연기관장과 임원의 임기에 관한... ",
-      "pubDate": "Wed, 25 Feb 2026 13:24:00 +0900",
-      "relevance_score": 2.694206464305555,
-      "full_title": "지방선거 앞두고 천안·아산 기관장 임기 종료 잇따라"
+      "title": "씨엔티테크, K팝 팬덤 플랫폼 ‘KDOL’ 운영사 해시퍼플에 투자",
+      "originallink": "http://www.shinailbo.co.kr/news/articleView.html?idxno=2197026",
+      "link": "http://www.shinailbo.co.kr/news/articleView.html?idxno=2197026",
+      "description": "해시퍼플은 최근 <b>충남콘텐츠진흥원</b>이 주관한 ‘2025 스케일업 액셀러레이팅 프로그램’ 데모데이에서 대상을 수상하며 기술력과 사업성을 인정받았다. 현재 플랫폼 내 투표와 펀딩 기반 광고 집행 과정을 디지털화해... ",
+      "pubDate": "Fri, 27 Feb 2026 17:12:00 +0900",
+      "relevance_score": 2.7149218352314817,
+      "full_title": "씨엔티테크, K팝 팬덤 플랫폼 ‘KDOL’ 운영사 해시퍼플에 투자"
     }
   ],
   "meta": {
     "collected_count": 1600,
-    "unique_count": 852,
-    "recent_count": 12,
-    "saved_count": 2
+    "unique_count": 851,
+    "recent_count": 5,
+    "saved_count": 1
   }
 }
