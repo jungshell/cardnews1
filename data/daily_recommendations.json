@@ -1,20 +1,20 @@
 {
-  "date": "2026-02-27",
+  "date": "2026-02-28",
   "articles": [
     {
-      "title": "씨엔티테크, K팝 팬덤 플랫폼 ‘KDOL’ 운영사 해시퍼플에 투자",
-      "originallink": "http://www.shinailbo.co.kr/news/articleView.html?idxno=2197026",
-      "link": "http://www.shinailbo.co.kr/news/articleView.html?idxno=2197026",
-      "description": "해시퍼플은 최근 <b>충남콘텐츠진흥원</b>이 주관한 ‘2025 스케일업 액셀러레이팅 프로그램’ 데모데이에서 대상을 수상하며 기술력과 사업성을 인정받았다. 현재 플랫폼 내 투표와 펀딩 기반 광고 집행 과정을 디지털화해... ",
-      "pubDate": "Fri, 27 Feb 2026 17:12:00 +0900",
-      "relevance_score": 2.7149218352314817,
-      "full_title": "씨엔티테크, K팝 팬덤 플랫폼 ‘KDOL’ 운영사 해시퍼플에 투자"
+      "title": "[VC’s Pick]삼성 출신들이 만든 시스템반도체 설계 기업, ‘보스반도체...",
+      "originallink": "http://www.edaily.co.kr/news/newspath.asp?newsid=02364886645355112",
+      "link": "https://n.news.naver.com/mnews/article/018/0006226428?sid=101",
+      "description": "해시퍼플은 최근 <b>충남콘텐츠진흥원</b>이 주관한 ‘2025 스케일업 액셀러레이팅 프로그램’에 참여했다. 최종 데모데이에서 대상을 받았다. 회사는 이번 투자로 팬덤 데이터를 활용한 AI 기반 개인 맞춤형 관광 코스 추천... ",
+      "pubDate": "Sat, 28 Feb 2026 14:58:00 +0900",
+      "relevance_score": 2.5911808377314816,
+      "full_title": "[VC’s Pick]삼성 출신들이 만든 시스템반도체 설계 기업, ‘보스반도체’ 870억 유치"
     }
   ],
   "meta": {
     "collected_count": 1600,
-    "unique_count": 851,
-    "recent_count": 5,
+    "unique_count": 856,
+    "recent_count": 2,
     "saved_count": 1
   }
 }
