@@ -1,29 +1,19 @@
 {
-  "date": "2026-03-29",
+  "date": "2026-03-30",
   "articles": [
     {
-      "title": "<b>충남콘텐츠진흥원</b>, TIPS 연계 투자 인센티브 확대 추진",
-      "originallink": "https://www.kdpress.co.kr/news/articleView.html?idxno=203756",
-      "link": "https://www.kdpress.co.kr/news/articleView.html?idxno=203756",
-      "description": "<b>충남콘텐츠진흥원</b>(원장 김곡미)은 충남 천안 그린스타트업타운 입주기업의 투자 유치 활성화와 TIPS 프로그램 연계 확대를 위한 '2026 TIPS 연계 민간투자 성과확산 인센티브 지원사업'을 추진한다. 이번 사업은 민간... ",
-      "pubDate": "Sun, 29 Mar 2026 12:52:00 +0900",
-      "relevance_score": 5.166748525910494,
-      "full_title": "충남콘텐츠진흥원, TIPS 연계 투자 인센티브 확대 추진"
-    },
-    {
       "title": "생태계 단신 중기부 ‘모두의 창업 프로젝트’ 본격 가동 외 251건",
-      "originallink": "https://www.venturesquare.net/1070338/",
-      "link": "https://www.venturesquare.net/1070338/",
+      "originallink": "https://www.venturesquare.net/?p=1070338",
+      "link": "https://www.venturesquare.net/?p=1070338",
       "description": "헬스케어 _20260327_0820 <b>충남콘텐츠진흥원</b> 2026 TIPS 연계 민간투자 성과확산 인센티브 지원사업 추진_20260327_0820 솔트웨어 생성형 AI 보안 솔루션 사피가디언 eGISEC 2026서 공개_20260327_0826... ",
       "pubDate": "Sun, 29 Mar 2026 23:55:00 +0900",
-      "relevance_score": 3.08063741625,
-      "full_title": "생태계 단신 중기부 ‘모두의 창업 프로젝트’ 본격 가동 외 251건"
+      "relevance_score": 1.743457910493827
     }
   ],
   "meta": {
     "collected_count": 1600,
-    "unique_count": 842,
-    "recent_count": 9,
-    "saved_count": 2
+    "unique_count": 858,
+    "recent_count": 38,
+    "saved_count": 1
   }
 }
