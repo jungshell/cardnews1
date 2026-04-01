@@ -1,19 +1,20 @@
 {
-  "date": "2026-03-30",
+  "date": "2026-04-01",
   "articles": [
     {
-      "title": "생태계 단신 중기부 ‘모두의 창업 프로젝트’ 본격 가동 외 251건",
-      "originallink": "https://www.venturesquare.net/?p=1070338",
-      "link": "https://www.venturesquare.net/?p=1070338",
-      "description": "헬스케어 _20260327_0820 <b>충남콘텐츠진흥원</b> 2026 TIPS 연계 민간투자 성과확산 인센티브 지원사업 추진_20260327_0820 솔트웨어 생성형 AI 보안 솔루션 사피가디언 eGISEC 2026서 공개_20260327_0826... ",
-      "pubDate": "Sun, 29 Mar 2026 23:55:00 +0900",
-      "relevance_score": 1.743457910493827
+      "title": "<b>충남콘텐츠진흥원</b>, 논산 딸기 축제 폐막식 무대 성황리 장식",
+      "originallink": "http://www.gocj.net/news/articleView.html?idxno=146919",
+      "link": "http://www.gocj.net/news/articleView.html?idxno=146919",
+      "description": "<b>충남콘텐츠진흥원</b>(원장 김곡미)이 운영하는 충남 음악창작소에서 발굴한 지역 뮤지션 '차잔밴드'가 논산 딸기 축제 폐막식 무대에 올라 축제의 마지막을 성황리에 장식했다. 차잔밴드는 충남 음악창작소의 창작지원... ",
+      "pubDate": "Wed, 01 Apr 2026 13:54:00 +0900",
+      "relevance_score": 5.2184571370216055,
+      "full_title": "충남콘텐츠진흥원, 논산 딸기 축제 폐막식 무대 성황리 장식"
     }
   ],
   "meta": {
     "collected_count": 1600,
-    "unique_count": 858,
-    "recent_count": 38,
+    "unique_count": 868,
+    "recent_count": 14,
     "saved_count": 1
   }
 }
