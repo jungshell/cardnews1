@@ -1,29 +1,29 @@
 {
-  "date": "2026-04-19",
+  "date": "2026-04-20",
   "articles": [
+    {
+      "title": "<b>충남</b>음악창작소, 부여 국가유산야행 연계 지역 뮤지션 공연 지원",
+      "originallink": "https://www.gukjenews.com/news/articleView.html?idxno=3561097",
+      "link": "https://www.gukjenews.com/news/articleView.html?idxno=3561097",
+      "description": "부여 국가유산야행 연계 지역 뮤지션 공연 지원/<b>충남콘텐츠진흥원</b> 제공 <b>충남콘텐츠진흥원</b>(원장 김곡미)은 4월 18일(토)과 19일(일), 부여 정림사지 일원에서 개최된 '부여 국가유산 야행' 사비 버스킹 프로그램에... ",
+      "pubDate": "Mon, 20 Apr 2026 10:16:00 +0900",
+      "relevance_score": 2.5109863673765433,
+      "full_title": "충남음악창작소, 부여 국가유산야행 연계 지역 뮤지션 공연 지원"
+    },
     {
       "title": "오세현 아산시장,현장속 답찾는 민생 대장정 마무리",
       "originallink": "https://www.ccdailynews.com/news/articleView.html?idxno=2411198",
       "link": "https://www.ccdailynews.com/news/articleView.html?idxno=2411198",
       "description": "현장 방문이 가장 잦은 교통 분야에서 오 시장은 도로망과 주차 인프라가 부족한 장재리 공영주차장과 <b>충남콘텐츠기업지원센터</b> 인근 임시주차장 등지를 찾아 주차난 해소방안과 함께 유휴부지 발굴 등 행정의 유연한... ",
       "pubDate": "Sun, 19 Apr 2026 21:08:00 +0900",
-      "relevance_score": 1.622916793117284,
+      "relevance_score": 0.28135673577160475,
       "full_title": "오세현 아산시장,현장속 답찾는 민생 대장정 마무리"
-    },
-    {
-      "title": "오세현 <b>충남</b> 아산시장, 현장 흙먼지 속에서 답 찾은 '민생 대장정' 완주",
-      "originallink": "https://www.ccdn.co.kr/news/articleView.html?idxno=1074179",
-      "link": "https://www.ccdn.co.kr/news/articleView.html?idxno=1074179",
-      "description": "오 시장은 첫 일정인 배방읍 공수리 중로 3-3호 도로 개설 공사 현장을 시작으로 장재리 공영주차장, <b>충남콘텐츠기업지원센터</b> 인근 임시주차장, 세교리 공영주차타워 후보지, 둔포면 염작초 임시주차장 등을 찾았다.... ",
-      "pubDate": "Sun, 19 Apr 2026 15:28:00 +0900",
-      "relevance_score": 1.3081019778703704,
-      "full_title": "오세현 충남 아산시장, 현장 흙먼지 속에서 답 찾은 ‘민생 대장정’ 완주"
     }
   ],
   "meta": {
     "collected_count": 1600,
-    "unique_count": 865,
-    "recent_count": 6,
+    "unique_count": 871,
+    "recent_count": 8,
     "saved_count": 2
   }
 }
