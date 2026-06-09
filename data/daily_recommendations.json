@@ -1,5 +1,5 @@
 {
-  "date": "2026-06-08",
+  "date": "2026-06-09",
   "articles": [
     {
       "title": "<b>충남콘텐츠진흥원</b>, '아시아 웹툰 현황과 전망' 2026 충남 글로벌 웹툰 세...",
@@ -7,23 +7,14 @@
       "link": "https://www.gukjenews.com/news/articleView.html?idxno=3603035",
       "description": "'아시아 웹툰 현황과 전망' 2026 충남 글로벌 웹툰 세미나 개막/<b>충남콘텐츠진흥원</b> 제공  <b>충남콘텐츠진흥원</b>은 6월 11일부터 12일까지 '2026 충남 글로벌 웹툰 연구 세미나'를 개최해 국내외 웹툰 전문가와 연구자들이 충남... ",
       "pubDate": "Mon, 08 Jun 2026 20:34:00 +0900",
-      "relevance_score": 5.355049041435185,
+      "relevance_score": 4.016699336064814,
       "full_title": "충남콘텐츠진흥원, '아시아 웹툰 현황과 전망' 2026 충남 글로벌 웹툰 세미나 개막"
-    },
-    {
-      "title": "<b>충남콘텐츠진흥원</b>·씨엔티테크, 충남 천안 그린스타트 업타운 '이노스트...",
-      "originallink": "https://www.etnews.com/20260608000017",
-      "link": "https://n.news.naver.com/mnews/article/030/0003435153?sid=101",
-      "description": "<b>충남콘텐츠진흥원</b>과 씨엔티테크가 충남 천안 복합형 스타트업파크를 중심으로 역량 있는 스타트업을 글로벌 유니콘 기업으로 육성하기 위해 '이노스트 챌린지 그라운드(INNOST CHALLENGE GROUND) 6기' 프로그램 참여... ",
-      "pubDate": "Mon, 08 Jun 2026 08:56:00 +0900",
-      "relevance_score": 4.708752743780864,
-      "full_title": "충남콘텐츠진흥원·씨엔티테크, 충남 천안 그린스타트 업타운 '이노스트 챌린지 그라운드 6기' 참가기업 모집"
     }
   ],
   "meta": {
     "collected_count": 1600,
-    "unique_count": 918,
-    "recent_count": 9,
-    "saved_count": 2
+    "unique_count": 913,
+    "recent_count": 1,
+    "saved_count": 1
   }
 }
