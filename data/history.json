@@ -617,6 +617,12 @@
       "keyword": "일일 자동 크롤링",
       "article_count": 2,
       "timestamp": "2026-06-16T08:43:22+09:00"
+    },
+    {
+      "date": "2026-06-19",
+      "keyword": "일일 자동 크롤링",
+      "article_count": 1,
+      "timestamp": "2026-06-19T08:42:24+09:00"
     }
   ],
   "deployments": []
