@@ -1,20 +1,29 @@
 {
-  "date": "2026-07-29",
+  "date": "2026-08-01",
   "articles": [
     {
-      "title": "<b>충남콘텐츠진흥원</b>, '블렌더 심화교육'... 3D 제작 전 과정 실습",
-      "originallink": "http://www.newsworker.co.kr/news/articleView.html?idxno=438879",
-      "link": "http://www.newsworker.co.kr/news/articleView.html?idxno=438879",
-      "description": "<b>충남콘텐츠진흥원</b>(원장 직무대행 손병선, 이하 진흥원)이 자신만의 캐릭터를 입체적인 아트토이로 제작하고 싶은 예비 창작자를 대상으로 심화 실습교육 참가자를 모집한다고 29일 밝혔다. 이번에 운영하는 '블렌더를... ",
-      "pubDate": "Wed, 29 Jul 2026 16:00:00 +0900",
-      "relevance_score": 5.113995028688271,
-      "full_title": "충남콘텐츠진흥원, '블렌더 심화교육'... 3D 제작 전 과정 실습"
+      "title": "드라마 촬영에 인센티브 줬더니...홍성서 촬영하며 3억2천만원 썼다",
+      "originallink": "https://www.tjb.co.kr/news05/bodo/view/id/101827",
+      "link": "https://www.tjb.co.kr/news05/bodo/view/id/101827",
+      "description": "2일 <b>충남콘텐츠진흥원</b>에 따르면 넷플릭스 드라마 '기리고' 제작진은 지난해 3월부터 8월까지 홍성에서 촬영하며 지역에서 모두 3억2천여만원을 지출했습니다. 제작진은 옛 홍성여고에서 32차례 촬영했고, 내포신도시... ",
+      "pubDate": "Sun, 02 Aug 2026 07:48:00 +0900",
+      "relevance_score": 3.4972230244290126,
+      "full_title": "드라마 촬영에 인센티브 줬더니...홍성서 촬영하며 3억2천만원 썼다"
+    },
+    {
+      "title": "<b>충남</b>서 드라마 한 편 찍었더니…지역서 3억2천만원 썼다",
+      "originallink": "https://www.yna.co.kr/view/AKR20260731068800063?input=1195m",
+      "link": "https://n.news.naver.com/mnews/article/001/0016228565?sid=103",
+      "description": "2일 <b>충남콘텐츠진흥원</b>에 따르면 넷플릭스 드라마 '기리고' 제작진은 지난해 3월부터 8월까지 홍성에서 촬영하며 지역에서 모두 3억2천여만원을 썼다. 제작진은 옛 홍성여고에서 32차례 촬영하고 내포신도시 도로에서도... ",
+      "pubDate": "Sun, 02 Aug 2026 06:00:00 +0900",
+      "relevance_score": 3.39722302345679,
+      "full_title": "충남서 드라마 한 편 찍었더니…지역서 3억2천만원 썼다"
     }
   ],
   "meta": {
     "collected_count": 1600,
-    "unique_count": 871,
-    "recent_count": 15,
-    "saved_count": 1
+    "unique_count": 887,
+    "recent_count": 4,
+    "saved_count": 2
   }
 }
