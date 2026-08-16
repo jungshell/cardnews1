@@ -1,20 +1,29 @@
 {
-  "date": "2026-08-15",
+  "date": "2026-08-16",
   "articles": [
     {
-      "title": "<b>충남콘텐츠진흥원</b>, AI 음원·뮤직비디오 공모전 수상작 발표",
-      "originallink": "https://www.webeconomy.co.kr/news/articleView.html?idxno=2268122",
-      "link": "https://www.webeconomy.co.kr/news/articleView.html?idxno=2268122",
-      "description": "<b>충남콘텐츠진흥원</b>은 '2026 충남 지역특화 AI 음원·뮤직비디오 제작 공모전'에서 충남의 지역·인물·문화자원을 생성형 인공지능(AI)으로 구현한 수상작 5편을 선정했다고 14일 밝혔다. 심사를 거쳐 충남 부문 2편과... ",
-      "pubDate": "Sat, 15 Aug 2026 00:04:00 +0900",
-      "relevance_score": 4.266474202762345,
-      "full_title": "충남콘텐츠진흥원, AI 음원·뮤직비디오 공모전 수상작 발표"
+      "title": "박수현의 인사 시계, 8년 전으로 돌아가나…민선 5·6기 인맥 재등장에...",
+      "originallink": "https://www.greened.kr/news/articleView.html?idxno=347786",
+      "link": "https://www.greened.kr/news/articleView.html?idxno=347786",
+      "description": "현재 충남도는 충남연구원과 충남테크노파크, 충남신용보증재단, 충남경제진흥원, 충남역사문화연구원, 한국유교문화진흥원, <b>충남콘텐츠진흥원</b>, 충남문화관광재단, 충남평생교육진흥원 등 9개 산하 공공기관의 기관장... ",
+      "pubDate": "Sun, 16 Aug 2026 21:36:00 +0900",
+      "relevance_score": 2.9629548303703706,
+      "full_title": "박수현의 인사 시계, 8년 전으로 돌아가나…민선 5·6기 인맥 재등장에 충남 정가 촉각"
+    },
+    {
+      "title": "[특별기획] <b>음악</b>하고, 아티스트 키우고…박공원의 '꿈'",
+      "originallink": "https://www.goodmorningcc.com/news/articleView.html?idxno=450738",
+      "link": "https://www.goodmorningcc.com/news/articleView.html?idxno=450738",
+      "description": "<b>충남음악창작소</b>에서 얻은 기회와 사람 박 씨의 음악 활동에서 빼놓을 수 없는 곳이 <b>충남음악창작소</b>다. 사실상 이곳을 통해 데뷔하고 본격적인 활동을 시작했다. 충남에서 나고 자랐지만 음악을 하기 전까지는 이런 공간이... ",
+      "pubDate": "Sun, 16 Aug 2026 13:34:00 +0900",
+      "relevance_score": 1.2166585324074075,
+      "full_title": "[특별기획] 음악하고, 아티스트 키우고…박공원의 '꿈'"
     }
   ],
   "meta": {
     "collected_count": 1600,
-    "unique_count": 908,
+    "unique_count": 922,
     "recent_count": 5,
-    "saved_count": 1
+    "saved_count": 2
   }
 }
