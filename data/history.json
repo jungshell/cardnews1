@@ -833,6 +833,12 @@
       "keyword": "일일 자동 크롤링",
       "article_count": 21,
       "timestamp": "2026-08-20T07:20:31+09:00"
+    },
+    {
+      "date": "2026-08-22",
+      "keyword": "일일 자동 크롤링",
+      "article_count": 12,
+      "timestamp": "2026-08-22T07:19:15+09:00"
     }
   ],
   "deployments": []
