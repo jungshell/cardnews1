@@ -1,28 +1,38 @@
 {
-  "date": "2026-08-22",
+  "date": "2026-08-23",
   "articles": [
     {
-      "title": "[천안톡톡]K-컬처, 독립기념관 물들인다",
-      "originallink": "https://www.sedaily.com/article/20081808?ref=naver",
-      "link": "https://n.news.naver.com/mnews/article/011/0004654078?sid=102",
-      "description": "K-웹툰관은 <b>충남콘텐츠진흥원</b>과 협력해 작가 라이브 드로잉 쇼와 캐릭터 퍼포먼스를 진행한다. 작가 라이브 드로잉 쇼는 웹툰 작가의 실시간 작화 과정을 대형 스크린으로 중계하고 작품 소개, 작가 인터뷰, 관람객... ",
-      "pubDate": "Sat, 22 Aug 2026 09:01:00 +0900",
-      "relevance_score": 2.262817752916667,
-      "full_title": "K"
+      "title": "‘2026 <b>충남</b>도지사배 이스포츠 대회’ 이틀간 개최",
+      "originallink": "https://www.sportsworldi.com/newsView/20260823508167",
+      "link": "https://n.news.naver.com/mnews/article/396/0000753142?sid=105",
+      "description": "충남도와 <b>충남콘텐츠진흥원</b>이 함께 한 올해 대회에는 청소년·대학생·직장인 선수와 국제 교류전 선수 등 236명과 관람객 1000여 명이 참석했다. 이번 대회는 기존 청소년·직장인 부문에 대학생 부문도 신설해 참여... ",
+      "pubDate": "Sun, 23 Aug 2026 18:32:00 +0900",
+      "relevance_score": 2.791770376527778,
+      "full_title": "‘2026 충남도지사배 이스포츠 대회’ 이틀간 개최"
     },
     {
-      "title": "[통하는 <b>충남</b>] 박수현 지사 “공공의료서비스 개선 도민 체감할 수 있도...",
-      "originallink": "https://www.kukinews.com/article/view/kuk202608210148",
-      "link": "https://www.kukinews.com/article/view/kuk202608210148",
-      "description": "22∼23일 홍성서 ‘2026 충남도지사배 이스포츠 대회’ 개최 충남도는 오는 22∼23일 홍성군 국민체육센터에서 <b>충남콘텐츠진흥원</b>과 ‘2026 충남도지사배 이스포츠대회’를 개최한다고 21일 밝혔다. 올해 대회에는 청소년... ",
-      "pubDate": "Fri, 21 Aug 2026 23:10:00 +0900",
-      "relevance_score": 1.7155955297376542
+      "title": "<b>충남</b>콘진원, GST 입주기업 오픈이노베이션 밋업",
+      "originallink": "https://www.daejonilbo.com/news/articleView.html?idxno=2296051",
+      "link": "https://n.news.naver.com/mnews/article/656/0000184740?sid=102",
+      "description": "<b>충남콘텐츠진흥원</b>(이하 충남콘진원)은 천안 그린스타트업타운(이하 GST) 입주기업과 대·중견기업, 공공기관을 연결하는 '2026 GST 오픈이노베이션 밋업' 1·2차 프로그램을 마쳤다고 23일 밝혔다. 지난 19일 열린 2차... ",
+      "pubDate": "Sun, 23 Aug 2026 12:24:00 +0900",
+      "relevance_score": 2.451029633101852,
+      "full_title": "충남콘진원, GST 입주기업 오픈이노베이션 밋업"
+    },
+    {
+      "title": "충청권 인디게임 개발사, 부산 행사서 공동관 운영…존재감 높여",
+      "originallink": "https://weekly.hankooki.com/news/articleView.html?idxno=7180174",
+      "link": "https://weekly.hankooki.com/news/articleView.html?idxno=7180174",
+      "description": "사진=<b>충남콘텐츠진흥원</b> <b>충남콘텐츠진흥원</b>이 지난 20일 부산인디커넥트페스티벌 2026(BIC 2026)에서 충남공동관과 커넥트픽 부스를 운영하며 행사를 성공적으로 마쳤다고 23일 밝혔다. BIC 2026은 지난 14일부터 16일까지... ",
+      "pubDate": "Sun, 23 Aug 2026 10:12:00 +0900",
+      "relevance_score": 2.328807410231481,
+      "full_title": "충청권 인디게임 개발사, 부산 행사서 공동관 운영…존재감 높여"
     }
   ],
   "meta": {
     "collected_count": 1600,
     "unique_count": 939,
-    "recent_count": 2,
-    "saved_count": 2
+    "recent_count": 9,
+    "saved_count": 3
   }
 }
