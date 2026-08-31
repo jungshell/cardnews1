@@ -1,29 +1,29 @@
 {
-  "date": "2026-08-29",
+  "date": "2026-08-31",
   "articles": [
+    {
+      "title": "<b>충남콘텐츠진흥원</b>, K-컬처 박람회서 AI 뉴콘텐츠 18선 공개",
+      "originallink": "https://www.gukjenews.com/news/articleView.html?idxno=3678829",
+      "link": "https://www.gukjenews.com/news/articleView.html?idxno=3678829",
+      "description": "<b>충남콘텐츠진흥원</b>, K-컬처박람회에 AI콘텐츠 지원/<b>충남콘텐츠진흥원</b> 제공  천안 독립기념관에서 열리는 '2026 천안 K-컬처 박람회'에서 <b>충남콘텐츠진흥원</b>이 AI 기반 뉴콘텐츠 작품 18개를 선보인다. 진흥원은 9월 2일부터... ",
+      "pubDate": "Sun, 30 Aug 2026 08:58:00 +0900",
+      "relevance_score": 4.655078192283951,
+      "full_title": "충남콘텐츠진흥원, K"
+    },
     {
       "title": "[게임in쾰른] 농심 辛라면 먹고 K팝 댄스도…유럽 게이머 홀린 K컬처",
       "originallink": "https://www.bloter.net/news/articleView.html?idxno=672144",
       "link": "https://n.news.naver.com/mnews/article/293/0000089745?sid=105",
       "description": "한국콘텐츠진흥원과 <b>충남콘텐츠진흥원</b>은 국내 인디 게임사들과 공동관을 꾸렸다. 특히 한국적 색채를 전면에 내세운 게임들이 현지 관람객의 발길을 붙잡았다. 무녀와 한국 설화를 소재로 한 '타래: 언바운드' 부스... ",
       "pubDate": "Sat, 29 Aug 2026 21:58:00 +0900",
-      "relevance_score": 2.8947303980092594,
+      "relevance_score": 1.5439670805401233,
       "full_title": "[게임in쾰른] 농심 辛라면 먹고 K팝 댄스도…유럽 게이머 홀린 K컬처"
-    },
-    {
-      "title": "[게임스컴2026] <b>충남</b> 게임사 3곳, 게임스컴서 '<b>충남</b>공동관'으로 글로벌 ...",
-      "originallink": "https://www.gamechosun.co.kr/webzine/article/view.php?no=224752",
-      "link": "https://www.gamechosun.co.kr/webzine/article/view.php?no=224752",
-      "description": "<b>충남콘텐츠진흥원</b>이 마련한 충남공동관에는 1HP스튜디오, 컴파스비지오, 케세라게임즈 등 충남 지역 기반 3개 게임사가 참가해 각자의 신작을 소개하고 있었다. 공동관은 B2B 전시장 특성에 맞춰 게임을 소개하는 공간과... ",
-      "pubDate": "Fri, 28 Aug 2026 23:48:00 +0900",
-      "relevance_score": 1.6632489157253088,
-      "full_title": "[게임스컴2026] 충남 게임사 3곳, 게임스컴서 '충남공동관'으로 글로벌 시장 공략"
     }
   ],
   "meta": {
     "collected_count": 1600,
-    "unique_count": 948,
-    "recent_count": 2,
+    "unique_count": 949,
+    "recent_count": 6,
     "saved_count": 2
   }
 }
