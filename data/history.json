@@ -1013,6 +1013,12 @@
       "keyword": "일일 자동 크롤링",
       "article_count": 4,
       "timestamp": "2026-10-02T10:16:09+09:00"
+    },
+    {
+      "date": "2026-10-03",
+      "keyword": "일일 자동 크롤링",
+      "article_count": 7,
+      "timestamp": "2026-10-03T09:54:20+09:00"
     }
   ],
   "deployments": []
