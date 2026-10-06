@@ -1,20 +1,38 @@
 {
-  "date": "2026-10-05",
+  "date": "2026-10-06",
   "articles": [
     {
-      "title": "김연 <b>충남콘텐츠진흥원</b>장 취임 ··· &quot;충남 콘텐츠, 세계가 즐기는 산업...",
-      "originallink": "https://www.ggilbo.com/news/articleView.html?idxno=1184991",
-      "link": "https://www.ggilbo.com/news/articleView.html?idxno=1184991",
-      "description": "▲ 지난 1일 김연 신임 (재)<b>충남콘텐츠진흥원</b>장이 취임식을 열고 새로운 2년의 임기를 시작했다. <b>충남콘텐츠진흥원</b> 제공 <b>충남콘텐츠진흥원</b>이 김연 제12대 신임 원장 취임을 계기로 충남 콘텐츠 산업의 외연 확장과 산업... ",
-      "pubDate": "Sat, 03 Oct 2026 21:56:00 +0900",
-      "relevance_score": 4.029284544969136,
-      "full_title": "김연 충남콘텐츠진흥원장 취임 ··· “충남 콘텐츠, 세계가 즐기는 산업으로 키운다”"
+      "title": "[인터뷰] 김연 신임 <b>충남콘텐츠진흥원</b>장, &quot;도의원 경험 바탕으로, 충남...",
+      "originallink": "https://www.joongdo.co.kr/web/view.php?key=20261005010000714",
+      "link": "https://www.joongdo.co.kr/web/view.php?key=20261005010000714",
+      "description": "- 신임 원장으로서 목표가 있다면 ▲ 가장 큰 목표는 AI와 <b>콘텐츠</b>를 <b>충남</b>의 경제와 일자리를 키우는 성장동력으로 만드는 것이다. 이를 위해 첫째, 기업의 성장사다리를 만들겠다. 아이디어와 제작지원에서 창업, 실증, 투자... ",
+      "pubDate": "Mon, 05 Oct 2026 11:34:00 +0900",
+      "relevance_score": 3.195972979984568,
+      "full_title": "[인터뷰] 김연 신임 충남콘텐츠진흥원장, \"도의원 경험 바탕으로, 충남만의 콘텐츠 경쟁력 키우겠다\""
+    },
+    {
+      "title": "<b>충남</b>콘진원 육성기업 담가라·메타로지 프리팁스 선정",
+      "originallink": "https://www.daejonilbo.com/news/articleView.html?idxno=2305102",
+      "link": "https://n.news.naver.com/mnews/article/656/0000188581?sid=102",
+      "description": "<b>충남콘텐츠진흥원</b>(충남콘진원)은 '2026 스케일업 액셀러레이팅' 육성기업 ㈜담가라(대표 정희정)와 메타로지㈜(대표 장석봉)가 중소벤처기업부의 프리팁스(Pre-TIPS)에 선정됐다고 5일 밝혔다. 프리팁스는 민간투자를... ",
+      "pubDate": "Mon, 05 Oct 2026 12:30:00 +0900",
+      "relevance_score": 2.24782483337963,
+      "full_title": "충남콘진원 육성기업 담가라·메타로지 프리팁스 선정"
+    },
+    {
+      "title": "&quot;AI·<b>콘텐츠</b> 융합 주도…<b>충남</b> 전역으로 확산&quot;",
+      "originallink": "https://www.daejonilbo.com/news/articleView.html?idxno=2305103",
+      "link": "https://n.news.naver.com/mnews/article/656/0000188580?sid=102",
+      "description": "&quot;우리가 할 수 있는 일에 집중하자&quot; 김연 신임 <b>충남콘텐츠진흥원</b>(충남콘진원) 원장이 '선택과 집중'을 강조했다. 지난 1일 제12대 원장으로 취임한 그는 진흥원의 정체성과 역할에 맞는 사업에 역량을 모으고 충남이 가진... ",
+      "pubDate": "Mon, 05 Oct 2026 12:29:00 +0900",
+      "relevance_score": 2.2468989065740743,
+      "full_title": "\"AI·콘텐츠 융합 주도…충남 전역으로 확산\""
     }
   ],
   "meta": {
     "collected_count": 1600,
-    "unique_count": 980,
-    "recent_count": 7,
-    "saved_count": 1
+    "unique_count": 984,
+    "recent_count": 6,
+    "saved_count": 3
   }
 }
